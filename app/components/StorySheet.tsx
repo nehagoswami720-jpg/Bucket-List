@@ -8,17 +8,17 @@ const TOTAL = 5;
 
 const QUESTIONS = [
   "What's something you tried that you wish someone had told you about sooner?",
-  "Where did it happen, and what made the setting unforgettable?",
-  "What's one thing you'd tell a stranger who wants to try this?",
-  "What surprised you the most about the experience?",
+  "Take us there. What do you remember most about that moment?",
+  "What made this worth it?",
+  "If a friend texted you right now asking how to try this — what would you tell them?",
   "Give it a title — what would you call this story?",
 ];
 
 const PLACEHOLDERS = [
   { lines: ["could be a trip, a skill, a meal, a", "moment, anything you lived and", "loved..."] },
-  { lines: ["a city, a trail, a kitchen, a rooftop,", "a table in the middle of nowhere..."] },
-  { lines: ["don't overthink it.", "just say it like you would to a friend..."] },
-  { lines: ["something you didn't see coming,", "a feeling, a moment, a detail..."] },
+  { lines: ["the part of the story you always tell", "first, when someone asks..."] },
+  { lines: ["the thing you didn't expect to feel..."] },
+  { lines: ["make it easy for them to start..."] },
   { lines: ["keep it short.", "make it yours..."] },
 ];
 
@@ -43,7 +43,7 @@ const courierBase: React.CSSProperties = {
 // ─── Progress Bar ────────────────────────────────────────────────────────────
 function ProgressBar({ step }: { step: number }) {
   return (
-    <div style={{ padding: "0 24px", marginTop: 24 }}>
+    <div style={{ padding: "0 24px" }}>
 
       {/* Journey dots + connecting lines */}
       <div style={{ display: "flex", alignItems: "center" }}>
@@ -149,6 +149,9 @@ export default function StorySheet({
   const [answers, setAnswers]     = useState<string[]>(Array(TOTAL).fill(""));
   const [value, setValue]         = useState("");
   const [keyboardHeight, setKbH]  = useState(0);
+  const [direction, setDirection] = useState<1 | -1>(1);
+  const [ripples, setRipples]     = useState<{ id: number; x: number; y: number }[]>([]);
+  const rippleId                  = useRef(0);
   const textareaRef               = useRef<HTMLTextAreaElement>(null);
   const atLimit                   = value.length >= MAX;
   const isEmpty                   = value.length === 0;
@@ -192,8 +195,19 @@ export default function StorySheet({
       return;
     }
 
+    setDirection(1);
     setStep((s) => s + 1);
     setValue(saved[step + 1] ?? "");
+  }
+
+  function handleBack() {
+    if (step === 0) return;
+    const saved = [...answers];
+    saved[step] = value;
+    setAnswers(saved);
+    setDirection(-1);
+    setStep((s) => s - 1);
+    setValue(saved[step - 1] ?? "");
   }
 
   if (!open) return null;
@@ -251,8 +265,47 @@ export default function StorySheet({
           />
         </div>
 
-        {/* Progress bar */}
-        <ProgressBar step={step} />
+        {/* Back button — 16px below pill */}
+        <div style={{ height: 28, marginTop: 16, paddingLeft: 24, flexShrink: 0, display: "flex", alignItems: "center" }}>
+          <AnimatePresence>
+            {step > 0 && (
+              <motion.button
+                initial={{ opacity: 0, x: -10 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: -10 }}
+                transition={{ duration: 0.22, ease: [0.25, 0.46, 0.45, 0.94] }}
+                whileTap={{ scale: 0.92 }}
+                onClick={handleBack}
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 6,
+                  background: "none",
+                  border: "none",
+                  cursor: "pointer",
+                  padding: 0,
+                  color: "#202020",
+                }}
+              >
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+                  <path d="M15 19L8 12L15 5" stroke="#202020" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                </svg>
+                <span style={{
+                  fontFamily: "'Courier New', Courier, monospace",
+                  fontSize: "17px",
+                  fontWeight: 600,
+                  letterSpacing: "-0.03em",
+                  color: "#202020",
+                }}>Back</span>
+              </motion.button>
+            )}
+          </AnimatePresence>
+        </div>
+
+        {/* Progress bar — 32px below back button */}
+        <div style={{ marginTop: 32, flexShrink: 0 }}>
+          <ProgressBar step={step} />
+        </div>
 
         {/* Scrollable content */}
         <div style={{
@@ -264,95 +317,94 @@ export default function StorySheet({
           overflowY: "auto",
           touchAction: "pan-y",
         }}>
-          {/* Question — animates on step change */}
+          {/* Question + input — animate together as a unit on step change */}
           <AnimatePresence mode="wait">
-            <motion.p
-              key={`q-${step}`}
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -10 }}
-              transition={{ duration: 0.28, ease: "easeOut" }}
-              style={{ ...questionFont, marginTop: 48 }}
+            <motion.div
+              key={`step-${step}`}
+              initial={{ opacity: 0, x: direction * 48, filter: "blur(8px)" }}
+              animate={{ opacity: 1, x: 0, filter: "blur(0px)" }}
+              exit={{ opacity: 0, x: direction * -48, filter: "blur(8px)" }}
+              transition={{ duration: 0.4, ease: [0.25, 0.46, 0.45, 0.94] }}
             >
-              {QUESTIONS[step]}
-            </motion.p>
-          </AnimatePresence>
+              {/* Question */}
+              <p style={{ ...questionFont, marginTop: 20 }}>{QUESTIONS[step]}</p>
 
-          {/* Input area */}
-          <div style={{ marginTop: 16, position: "relative" }}>
-            <AnimatePresence>
-              {isEmpty && (
-                <motion.div
-                  key={`ph-${step}`}
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  exit={{ opacity: 0 }}
-                  transition={{ duration: 0.15 }}
+              {/* Input area */}
+              <div style={{ marginTop: 16, position: "relative" }}>
+                <AnimatePresence>
+                  {isEmpty && (
+                    <motion.div
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      exit={{ opacity: 0 }}
+                      transition={{ duration: 0.15 }}
+                      style={{
+                        ...courierBase,
+                        color: "#6D6D6D",
+                        fontWeight: 600,
+                        pointerEvents: "none",
+                        position: "absolute",
+                        top: 0, left: 0, right: 0,
+                        userSelect: "none",
+                      }}
+                    >
+                      {placeholder.lines.map((line, i) => (
+                        <span key={i}>
+                          {line}
+                          {i < placeholder.lines.length - 1 && <br />}
+                        </span>
+                      ))}
+                      <motion.span
+                        animate={{ opacity: [1, 0] }}
+                        transition={{ duration: 0.55, repeat: Infinity, repeatType: "reverse" }}
+                        style={{ marginLeft: 1 }}
+                      >
+                        |
+                      </motion.span>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+
+                <textarea
+                  ref={textareaRef}
+                  value={value}
+                  onChange={(e) => {
+                    if (e.target.value.length <= MAX) setValue(e.target.value);
+                  }}
+                  rows={5}
                   style={{
                     ...courierBase,
-                    color: "#6D6D6D",
-                    fontWeight: 600,
-                    pointerEvents: "none",
-                    position: "absolute",
-                    top: 0, left: 0, right: 0,
-                    userSelect: "none",
+                    color: "#202020",
+                    width: "100%",
+                    background: "transparent",
+                    border: "none",
+                    outline: "none",
+                    resize: "none",
+                    padding: 0,
+                    caretColor: "#202020",
+                    boxSizing: "border-box",
+                    ...(isEmpty ? { caretColor: "transparent", color: "transparent" } : {}),
                   }}
-                >
-                  {placeholder.lines.map((line, i) => (
-                    <span key={i}>
-                      {line}
-                      {i < placeholder.lines.length - 1 && <br />}
-                    </span>
-                  ))}
+                />
+
+                <div style={{ marginTop: 8, display: "flex", justifyContent: "flex-end" }}>
                   <motion.span
-                    animate={{ opacity: [1, 0] }}
-                    transition={{ duration: 0.55, repeat: Infinity, repeatType: "reverse" }}
-                    style={{ marginLeft: 1 }}
+                    animate={atLimit ? { scale: [1, 1.2, 1] } : { scale: 1 }}
+                    transition={{ duration: 0.3 }}
+                    style={{
+                      ...courierBase,
+                      fontSize: "14px",
+                      color: atLimit ? "#e03b3b" : "#7D7D7D",
+                      fontWeight: atLimit ? 700 : 400,
+                      transition: "color 0.2s ease",
+                    }}
                   >
-                    |
+                    {value.length}/{MAX}
                   </motion.span>
-                </motion.div>
-              )}
-            </AnimatePresence>
-
-            <textarea
-              ref={textareaRef}
-              value={value}
-              onChange={(e) => {
-                if (e.target.value.length <= MAX) setValue(e.target.value);
-              }}
-              rows={5}
-              style={{
-                ...courierBase,
-                color: "#202020",
-                width: "100%",
-                background: "transparent",
-                border: "none",
-                outline: "none",
-                resize: "none",
-                padding: 0,
-                caretColor: "#202020",
-                boxSizing: "border-box",
-                ...(isEmpty ? { caretColor: "transparent", color: "transparent" } : {}),
-              }}
-            />
-
-            <div style={{ marginTop: 8, display: "flex", justifyContent: "flex-end" }}>
-              <motion.span
-                animate={atLimit ? { scale: [1, 1.2, 1] } : { scale: 1 }}
-                transition={{ duration: 0.3 }}
-                style={{
-                  ...courierBase,
-                  fontSize: "14px",
-                  color: atLimit ? "#e03b3b" : "#7D7D7D",
-                  fontWeight: atLimit ? 700 : 400,
-                  transition: "color 0.2s ease",
-                }}
-              >
-                {value.length}/{MAX}
-              </motion.span>
-            </div>
-          </div>
+                </div>
+              </div>
+            </motion.div>
+          </AnimatePresence>
 
           <div style={{ flex: 1 }} />
         </div>
@@ -369,8 +421,20 @@ export default function StorySheet({
           zIndex: 62,
           transition: "bottom 0.25s ease, padding 0.25s ease",
         }}>
-          <button
-            onClick={handleNext}
+          <motion.button
+            onClick={(e) => {
+              const rect = e.currentTarget.getBoundingClientRect();
+              const id = ++rippleId.current;
+              setRipples((r) => [
+                ...r,
+                { id, x: e.clientX - rect.left, y: e.clientY - rect.top },
+              ]);
+              setTimeout(() => setRipples((r) => r.filter((rp) => rp.id !== id)), 700);
+              handleNext();
+            }}
+            whileTap={{ scale: 0.96 }}
+            whileHover={{ filter: "brightness(1.12)" }}
+            transition={{ type: "spring", stiffness: 400, damping: 28 }}
             style={{
               fontFamily: "'Courier New', Courier, monospace",
               letterSpacing: "-0.02em",
@@ -384,10 +448,30 @@ export default function StorySheet({
               border: "none",
               borderRadius: "14px",
               cursor: "pointer",
+              position: "relative",
+              overflow: "hidden",
             }}
           >
+            {ripples.map((r) => (
+              <motion.span
+                key={r.id}
+                initial={{ scale: 0, opacity: 0.4 }}
+                animate={{ scale: 14, opacity: 0 }}
+                transition={{ duration: 0.65, ease: [0.25, 0.46, 0.45, 0.94] }}
+                style={{
+                  position: "absolute",
+                  left: r.x - 20,
+                  top: r.y - 20,
+                  width: 40,
+                  height: 40,
+                  borderRadius: "50%",
+                  backgroundColor: "rgba(255,255,255,0.22)",
+                  pointerEvents: "none",
+                }}
+              />
+            ))}
             {isLastStep ? "Submit story" : "Keep going"}
-          </button>
+          </motion.button>
         </div>
       </motion.div>
     </>
