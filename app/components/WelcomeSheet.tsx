@@ -12,12 +12,19 @@ const para: React.CSSProperties = {
   ...font,
   fontSize: "16px",
   color: "#000000",
+  fontWeight: "500",
   textAlign: "center",
   lineHeight: 1.5,
   margin: 0,
 };
 
-export default function WelcomeSheet({ open }: { open: boolean }) {
+export default function WelcomeSheet({
+  open,
+  onStartExploring,
+}: {
+  open: boolean;
+  onStartExploring?: () => void;
+}) {
   if (!open) return null;
 
   return (
@@ -132,6 +139,7 @@ export default function WelcomeSheet({ open }: { open: boolean }) {
 
         {/* Button */}
         <button
+          onClick={onStartExploring}
           style={{
             ...font,
             width: "100%",

@@ -13,7 +13,7 @@ const baseFont: React.CSSProperties = {
   letterSpacing: "-0.02em",
 };
 
-export default function SplashScreen() {
+export default function SplashScreen({ onStartExploring }: { onStartExploring?: () => void }) {
   const [done, setDone] = useState(false);
   const [showSheet, setShowSheet] = useState(false);
 
@@ -89,7 +89,7 @@ export default function SplashScreen() {
         )}
       </AnimatePresence>
 
-      <WelcomeSheet open={showSheet} />
+      <WelcomeSheet open={showSheet} onStartExploring={onStartExploring} />
     </div>
   );
 }
