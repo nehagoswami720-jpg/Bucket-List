@@ -3,15 +3,17 @@
 import { useRef, useEffect, useState, useCallback, Fragment } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 
-const MAX   = 200;
-const TOTAL = 5;
+const MAX       = 200;
+const MAX_TITLE = 80;
+const TOTAL     = 6;
 
 const QUESTIONS = [
   "What's something you tried that you wish someone had told you about sooner?",
   "Take us there. What do you remember most about that moment?",
   "What made this worth it?",
   "If a friend texted you right now asking how to try this — what would you tell them?",
-  "Give it a title — what would you call this story?",
+  "Almost done. Just a few things so the right person stumbles onto this.",
+  "Give your story a title. Make it one they can't ignore.",
 ];
 
 const PLACEHOLDERS = [
@@ -19,7 +21,16 @@ const PLACEHOLDERS = [
   { lines: ["the part of the story you always tell", "first, when someone asks..."] },
   { lines: ["the thing you didn't expect to feel..."] },
   { lines: ["make it easy for them to start..."] },
-  { lines: ["keep it short.", "make it yours..."] },
+  { lines: ["choose what your story is about.", "pick what fits. more than one is fine."] },
+  { lines: ["e.g. the night I ate alone in Tokyo..."] },
+];
+
+const CATEGORIES = [
+  { name: "Adventure",   desc: "new places, unfamiliar situations" },
+  { name: "Learning",    desc: "skills, classes, first times" },
+  { name: "Connecting",  desc: "strangers, unexpected bonds" },
+  { name: "Going wild",  desc: "absurd, once-in-a-lifetime" },
+  { name: "Going solo",  desc: "just you and your own company" },
 ];
 
 const questionFont: React.CSSProperties = {
@@ -39,6 +50,83 @@ const courierBase: React.CSSProperties = {
   letterSpacing: "-0.04em",
   lineHeight: 1.55,
 };
+
+// ─── Category Card ───────────────────────────────────────────────────────────
+function CategoryCard({
+  cat,
+  selected,
+  onToggle,
+}: {
+  cat: { name: string; desc: string };
+  selected: boolean;
+  onToggle: () => void;
+}) {
+  const [cardRipples, setCardRipples] = useState<{ id: number; x: number; y: number }[]>([]);
+  const cardRippleId = useRef(0);
+
+  return (
+    <motion.button
+      onClick={(e) => {
+        const rect = e.currentTarget.getBoundingClientRect();
+        const id = ++cardRippleId.current;
+        setCardRipples((r) => [...r, { id, x: e.clientX - rect.left, y: e.clientY - rect.top }]);
+        setTimeout(() => setCardRipples((r) => r.filter((rp) => rp.id !== id)), 600);
+        onToggle();
+      }}
+      animate={{ borderColor: selected ? "#464646" : "#CECECE" }}
+      transition={{ duration: 0.2 }}
+      whileTap={{ scale: 0.97 }}
+      style={{
+        backgroundColor: "transparent",
+        borderRadius: 8,
+        border: "2px solid #CECECE",
+        padding: "16px 18px",
+        cursor: "pointer",
+        textAlign: "left",
+        display: "block",
+        width: "100%",
+        position: "relative",
+        overflow: "hidden",
+      }}
+    >
+      {/* Ripple */}
+      {cardRipples.map((r) => (
+        <motion.span
+          key={r.id}
+          initial={{ scale: 0, opacity: 0.22 }}
+          animate={{ scale: 12, opacity: 0 }}
+          transition={{ duration: 0.5, ease: [0.25, 0.46, 0.45, 0.94] }}
+          style={{
+            position: "absolute",
+            left: r.x - 20,
+            top: r.y - 20,
+            width: 40,
+            height: 40,
+            borderRadius: "50%",
+            backgroundColor: "rgba(0,0,0,0.08)",
+            pointerEvents: "none",
+          }}
+        />
+      ))}
+
+      <div style={{
+        fontFamily: "'Courier New', Courier, monospace",
+        fontSize: "20px",
+        fontWeight: 600,
+        letterSpacing: "-0.04em",
+        color: "#202020",
+      }}>{cat.name}</div>
+      <div style={{
+        fontFamily: "'Courier New', Courier, monospace",
+        fontSize: "16px",
+        fontWeight: 600,
+        letterSpacing: "-0.04em",
+        color: "#6D6D6D",
+        marginTop: 4,
+      }}>{cat.desc}</div>
+    </motion.button>
+  );
+}
 
 // ─── Progress Bar ────────────────────────────────────────────────────────────
 function ProgressBar({ step }: { step: number }) {
@@ -150,12 +238,17 @@ export default function StorySheet({
   const [value, setValue]         = useState("");
   const [keyboardHeight, setKbH]  = useState(0);
   const [direction, setDirection] = useState<1 | -1>(1);
+  const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
   const [ripples, setRipples]     = useState<{ id: number; x: number; y: number }[]>([]);
+  const [sheetDraggable, setSheetDraggable] = useState(true);
   const rippleId                  = useRef(0);
   const textareaRef               = useRef<HTMLTextAreaElement>(null);
-  const atLimit                   = value.length >= MAX;
-  const isEmpty                   = value.length === 0;
+  const scrollRef                 = useRef<HTMLDivElement>(null);
   const isLastStep                = step === TOTAL - 1;
+  const isCategoryStep            = step === TOTAL - 2;
+  const charLimit                 = isLastStep ? MAX_TITLE : MAX;
+  const atLimit                   = value.length >= charLimit;
+  const isEmpty                   = value.length === 0;
 
   const handleViewport = useCallback(() => {
     const vv = window.visualViewport;
@@ -179,6 +272,7 @@ export default function StorySheet({
       setValue("");
       setStep(0);
       setAnswers(Array(TOTAL).fill(""));
+      setSelectedCategories([]);
       setKbH(0);
       return;
     }
@@ -198,6 +292,12 @@ export default function StorySheet({
     setDirection(1);
     setStep((s) => s + 1);
     setValue(saved[step + 1] ?? "");
+  }
+
+  function toggleCategory(name: string) {
+    setSelectedCategories((prev) =>
+      prev.includes(name) ? prev.filter((c) => c !== name) : [...prev, name]
+    );
   }
 
   function handleBack() {
@@ -229,7 +329,7 @@ export default function StorySheet({
       <motion.div
         initial={{ y: "100%" }}
         animate={{ y: 0 }}
-        drag="y"
+        drag={sheetDraggable ? "y" : false}
         dragConstraints={{ top: 0 }}
         dragElastic={{ top: 0, bottom: 0.3 }}
         onDragEnd={(_, info) => {
@@ -266,7 +366,7 @@ export default function StorySheet({
         </div>
 
         {/* Back button — 16px below pill */}
-        <div style={{ height: 28, marginTop: 16, paddingLeft: 24, flexShrink: 0, display: "flex", alignItems: "center" }}>
+        <div style={{ height: 28, marginTop: 16, paddingLeft: 16, flexShrink: 0, display: "flex", alignItems: "center" }}>
           <AnimatePresence>
             {step > 0 && (
               <motion.button
@@ -279,7 +379,7 @@ export default function StorySheet({
                 style={{
                   display: "flex",
                   alignItems: "center",
-                  gap: 6,
+                  gap: 4,
                   background: "none",
                   border: "none",
                   cursor: "pointer",
@@ -287,13 +387,13 @@ export default function StorySheet({
                   color: "#202020",
                 }}
               >
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" style={{ display: "block" }}>
                   <path d="M15 19L8 12L15 5" stroke="#202020" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
                 </svg>
                 <span style={{
-                  fontFamily: "'Courier New', Courier, monospace",
+                  fontFamily: "Helvetica, Arial, sans-serif",
                   fontSize: "17px",
-                  fontWeight: 600,
+                  fontWeight: 400,
                   letterSpacing: "-0.03em",
                   color: "#202020",
                 }}>Back</span>
@@ -308,15 +408,24 @@ export default function StorySheet({
         </div>
 
         {/* Scrollable content */}
-        <div style={{
-          flex: 1,
-          display: "flex",
-          flexDirection: "column",
-          padding: "0 24px 120px",
-          boxSizing: "border-box",
-          overflowY: "auto",
-          touchAction: "pan-y",
-        }}>
+        <div
+          ref={scrollRef}
+          onPointerDown={(e) => e.stopPropagation()}
+          onScroll={() => {
+            const el = scrollRef.current;
+            if (!el) return;
+            setSheetDraggable(el.scrollTop === 0);
+          }}
+          style={{
+            flex: 1,
+            display: "flex",
+            flexDirection: "column",
+            padding: isCategoryStep ? "0 24px 160px" : "0 24px 120px",
+            boxSizing: "border-box",
+            overflowY: "auto",
+            touchAction: "pan-y",
+          }}
+        >
           {/* Question + input — animate together as a unit on step change */}
           <AnimatePresence mode="wait">
             <motion.div
@@ -329,80 +438,111 @@ export default function StorySheet({
               {/* Question */}
               <p style={{ ...questionFont, marginTop: 20 }}>{QUESTIONS[step]}</p>
 
-              {/* Input area */}
-              <div style={{ marginTop: 16, position: "relative" }}>
-                <AnimatePresence>
-                  {isEmpty && (
-                    <motion.div
-                      initial={{ opacity: 0 }}
-                      animate={{ opacity: 1 }}
-                      exit={{ opacity: 0 }}
-                      transition={{ duration: 0.15 }}
-                      style={{
-                        ...courierBase,
-                        color: "#6D6D6D",
-                        fontWeight: 600,
-                        pointerEvents: "none",
-                        position: "absolute",
-                        top: 0, left: 0, right: 0,
-                        userSelect: "none",
-                      }}
-                    >
-                      {placeholder.lines.map((line, i) => (
-                        <span key={i}>
-                          {line}
-                          {i < placeholder.lines.length - 1 && <br />}
-                        </span>
-                      ))}
-                      <motion.span
-                        animate={{ opacity: [1, 0] }}
-                        transition={{ duration: 0.55, repeat: Infinity, repeatType: "reverse" }}
-                        style={{ marginLeft: 1 }}
-                      >
-                        |
-                      </motion.span>
-                    </motion.div>
-                  )}
-                </AnimatePresence>
-
-                <textarea
-                  ref={textareaRef}
-                  value={value}
-                  onChange={(e) => {
-                    if (e.target.value.length <= MAX) setValue(e.target.value);
-                  }}
-                  rows={5}
-                  style={{
+              {isCategoryStep ? (
+                /* ── Category selection (step 5) ── */
+                <>
+                  <p style={{
                     ...courierBase,
-                    color: "#202020",
-                    width: "100%",
-                    background: "transparent",
-                    border: "none",
-                    outline: "none",
-                    resize: "none",
-                    padding: 0,
-                    caretColor: "#202020",
-                    boxSizing: "border-box",
-                    ...(isEmpty ? { caretColor: "transparent", color: "transparent" } : {}),
-                  }}
-                />
+                    fontSize: "16px",
+                    color: "#6D6D6D",
+                    fontWeight: 600,
+                    margin: 0,
+                    marginTop: 10,
+                    lineHeight: 1.55,
+                  }}>
+                    {PLACEHOLDERS[step].lines.map((line, i) => (
+                      <span key={i}>{line}{i < PLACEHOLDERS[step].lines.length - 1 && <br />}</span>
+                    ))}
+                  </p>
 
-                <div style={{ marginTop: 8, display: "flex", justifyContent: "flex-end" }}>
-                  <motion.span
-                    animate={atLimit ? { scale: [1, 1.2, 1] } : { scale: 1 }}
-                    transition={{ duration: 0.3 }}
+                  <div style={{ marginTop: 32, display: "flex", flexDirection: "column", gap: 16 }}>
+                    {CATEGORIES.map((cat) => (
+                      <CategoryCard
+                        key={cat.name}
+                        cat={cat}
+                        selected={selectedCategories.includes(cat.name)}
+                        onToggle={() => toggleCategory(cat.name)}
+                      />
+                    ))}
+                  </div>
+                </>
+              ) : (
+                /* ── Text input (steps 1–4) ── */
+                <div style={{ marginTop: 16, position: "relative" }}>
+                  <AnimatePresence>
+                    {isEmpty && (
+                      <motion.div
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        transition={{ duration: 0.15 }}
+                        style={{
+                          ...courierBase,
+                          color: "#6D6D6D",
+                          fontWeight: 500,
+                          pointerEvents: "none",
+                          position: "absolute",
+                          top: 0, left: 0, right: 0,
+                          userSelect: "none",
+                        }}
+                      >
+                        {placeholder.lines.map((line, i) => (
+                          <span key={i}>
+                            {line}
+                            {i < placeholder.lines.length - 1 && <br />}
+                          </span>
+                        ))}
+                        <motion.span
+                          animate={{ opacity: [1, 0] }}
+                          transition={{ duration: 0.55, repeat: Infinity, repeatType: "reverse" }}
+                          style={{ marginLeft: 1 }}
+                        >
+                          |
+                        </motion.span>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+
+                  <textarea
+                    ref={textareaRef}
+                    value={value}
+                    onChange={(e) => {
+                      if (e.target.value.length <= charLimit) setValue(e.target.value);
+                    }}
+                    rows={5}
                     style={{
                       ...courierBase,
-                      fontSize: "14px",
-                      color: atLimit ? "#e03b3b" : "#7D7D7D",
-                      fontWeight: atLimit ? 700 : 400,
-                      transition: "color 0.2s ease",
+                      color: "#555555",
+                      fontWeight: 600,
+                      width: "100%",
+                      background: "transparent",
+                      border: "none",
+                      outline: "none",
+                      resize: "none",
+                      padding: 0,
+                      caretColor: "#202020",
+                      boxSizing: "border-box",
+                      ...(isEmpty ? { caretColor: "transparent", color: "transparent" } : {}),
                     }}
-                  >
-                    {value.length}/{MAX}
-                  </motion.span>
+                  />
+
+                  <div style={{ marginTop: 8, display: "flex", justifyContent: "flex-end" }}>
+                    <motion.span
+                      animate={atLimit ? { scale: [1, 1.2, 1] } : { scale: 1 }}
+                      transition={{ duration: 0.3 }}
+                      style={{
+                        ...courierBase,
+                        fontSize: "14px",
+                        color: atLimit ? "#e03b3b" : "#7D7D7D",
+                        fontWeight: atLimit ? 700 : 400,
+                        transition: "color 0.2s ease",
+                      }}
+                    >
+                      {value.length}/{charLimit}
+                    </motion.span>
+                  </div>
                 </div>
-              </div>
+              )}
             </motion.div>
           </AnimatePresence>
 
@@ -470,7 +610,7 @@ export default function StorySheet({
                 }}
               />
             ))}
-            {isLastStep ? "Submit story" : "Keep going"}
+            {isLastStep ? "Share my story" : isCategoryStep ? "Almost done" : "Keep going"}
           </motion.button>
         </div>
       </motion.div>
