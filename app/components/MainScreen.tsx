@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import BottomNav from "./BottomNav";
+import WanderFeed from "./WanderFeed";
 import WanderEmptyState from "./WanderEmptyState";
 import CollectEmptyState from "./CollectEmptyState";
 import StorySheet from "./StorySheet";
@@ -12,6 +13,8 @@ type Tab = "Wander" | "Collect";
 export default function MainScreen() {
   const [activeTab, setActiveTab]       = useState<Tab>("Wander");
   const [showStorySheet, setShowStorySheet] = useState(false);
+  // TODO: replace with real data check once backend is wired
+  const hasStories = true;
 
   return (
     <motion.div
@@ -40,7 +43,11 @@ export default function MainScreen() {
             transition={{ duration: 0.25 }}
             style={{ width: "100%" }}
           >
-            <WanderEmptyState onStart={() => setShowStorySheet(true)} />
+            {/* TODO: replace `hasStories` with real data check once backend is wired */}
+            {hasStories
+              ? <WanderFeed onStart={() => setShowStorySheet(true)} />
+              : <WanderEmptyState onStart={() => setShowStorySheet(true)} />
+            }
           </motion.div>
         )}
 
