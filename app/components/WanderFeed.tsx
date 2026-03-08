@@ -177,17 +177,17 @@ function getBubblePath(w: number, h: number, tailDir: TailDir): string {
 // ── Story bubble ───────────────────────────────────────────────────────────────
 function StoryBubble({
   story,
-  activeFilter,
+  activeFilters,
   onTap,
 }: {
   story: Story;
-  activeFilter: string;
+  activeFilters: string[];
   onTap: (s: Story) => void;
 }) {
   const th = 12; // tail height
   const svgH = story.h + th;
   const path = getBubblePath(story.w, story.h, story.tailDir);
-  const visible = activeFilter === "All" || story.category === activeFilter;
+  const visible = activeFilters.includes("All") || activeFilters.includes(story.category);
 
   return (
     /* rotation wrapper — plain div so Framer Motion transforms don't conflict */
@@ -334,30 +334,32 @@ function StoryBottomSheet({
             key="sheet-backdrop"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.25 }}
+            exit={{ opacity: 0, transition: { duration: 0.42, ease: "easeIn" } }}
+            transition={{ duration: 0.5, ease: "easeOut" }}
             onClick={onClose}
             style={{
               position: "fixed",
               inset: 0,
-              backgroundColor: "rgba(0,0,0,0.28)",
-              zIndex: 55,
+              backgroundColor: "rgba(0,0,0,0.32)",
+              backdropFilter: "blur(3px)",
+              WebkitBackdropFilter: "blur(3px)",
+              zIndex: 200,
             }}
           />
 
           {/* Sheet */}
           <motion.div
             key="sheet"
-            initial={{ y: "100%" }}
-            animate={{ y: 0 }}
-            exit={{ y: "100%" }}
+            initial={{ y: "100%", borderRadius: "28px 28px 0 0" }}
+            animate={{ y: 0, borderRadius: "20px 20px 0 0" }}
+            exit={{ y: "100%", transition: { type: "spring", stiffness: 180, damping: 28 } }}
             drag="y"
             dragConstraints={{ top: 0 }}
             dragElastic={{ top: 0, bottom: 0.3 }}
             onDragEnd={(_, info) => {
               if (info.offset.y > 80 || info.velocity.y > 500) onClose();
             }}
-            transition={{ duration: 0.52, ease: [0.32, 0.72, 0, 1] }}
+            transition={{ type: "spring", stiffness: 200, damping: 30 }}
             style={{
               position: "fixed",
               bottom: 0,
@@ -366,7 +368,7 @@ function StoryBottomSheet({
               height: "68vh",
               backgroundColor: "#F5F0E8",
               borderRadius: "20px 20px 0 0",
-              zIndex: 56,
+              zIndex: 201,
               display: "flex",
               flexDirection: "column",
               boxSizing: "border-box",
@@ -396,24 +398,30 @@ function StoryBottomSheet({
               />
             </div>
 
-            <div style={{ padding: "12px 24px 48px", flex: 1, display: "flex", flexDirection: "column" }}>
+            <motion.div
+              initial={{ opacity: 0, y: 16 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.22, duration: 0.55, ease: [0.22, 1, 0.36, 1] }}
+              style={{ padding: "12px 24px 48px", flex: 1, display: "flex", flexDirection: "column" }}
+            >
               {/* Category pill */}
               <div
                 style={{
                   display: "inline-flex",
                   alignSelf: "flex-start",
-                  backgroundColor: "rgba(0,0,0,0.07)",
+                  backgroundColor: CATEGORY_COLOR[story.category],
                   borderRadius: 6,
-                  padding: "3px 10px",
-                  marginBottom: 12,
+                  padding: "4px 10px",
+                  marginBottom: 14,
                 }}
               >
                 <span
                   style={{
-                    fontFamily: "'Courier New', Courier, monospace",
+                    fontFamily: "Helvetica, Arial, sans-serif",
                     fontSize: "12px",
-                    color: "#555",
-                    letterSpacing: "-0.02em",
+                    fontWeight: 600,
+                    color: "#ffffff",
+                    letterSpacing: "0.01em",
                   }}
                 >
                   {story.category}
@@ -423,11 +431,12 @@ function StoryBottomSheet({
               {/* Title */}
               <h2
                 style={{
-                  fontFamily: "Georgia, 'Times New Roman', serif",
-                  fontSize: "22px",
+                  fontFamily: "Helvetica, Arial, sans-serif",
+                  fontSize: "24px",
                   fontWeight: 700,
-                  color: "#202126",
+                  color: "#2A2A2A",
                   lineHeight: 1.3,
+                  letterSpacing: "-0.02em",
                   margin: "0 0 20px",
                 }}
               >
@@ -437,10 +446,10 @@ function StoryBottomSheet({
               {/* Story body — placeholder */}
               <p
                 style={{
-                  fontFamily: "Georgia, 'Times New Roman', serif",
+                  fontFamily: "'Courier New', Courier, monospace",
                   fontSize: "16px",
-                  color: "#3a3530",
-                  lineHeight: 1.8,
+                  color: "#1E1E1E",
+                  lineHeight: 1.55,
                   margin: 0,
                 }}
               >
@@ -471,7 +480,7 @@ function StoryBottomSheet({
                   📌
                 </motion.button>
               </div>
-            </div>
+            </motion.div>
           </motion.div>
         </>
       )}
@@ -532,10 +541,39 @@ function FilterChip({
 }
 
 // ── Main WanderFeed ────────────────────────────────────────────────────────────
-export default function WanderFeed({ onStart }: { onStart?: () => void }) {
-  const [activeFilter, setActiveFilter] = useState("All");
+export default function WanderFeed({
+  onStart,
+  onStoryOpen,
+}: {
+  onStart?: () => void;
+  onStoryOpen?: (open: boolean) => void;
+}) {
+  const [activeFilters, setActiveFilters] = useState<string[]>(["All"]);
+
+  function toggleFilter(f: string) {
+    if (f === "All") {
+      setActiveFilters(["All"]);
+      return;
+    }
+    setActiveFilters((prev) => {
+      const withoutAll = prev.filter((x) => x !== "All");
+      const already = withoutAll.includes(f);
+      const next = already ? withoutAll.filter((x) => x !== f) : [...withoutAll, f];
+      return next.length === 0 ? ["All"] : next;
+    });
+  }
   const [selectedStory, setSelectedStory] = useState<Story | null>(null);
   const transformRef = useRef<ReactZoomPanPinchRef>(null);
+
+  function openStory(story: Story) {
+    setSelectedStory(story);
+    onStoryOpen?.(true);
+  }
+
+  function closeStory() {
+    setSelectedStory(null);
+    onStoryOpen?.(false);
+  }
 
   // Drop user at a random spot within the bubble cluster on each page load
   useEffect(() => {
@@ -586,8 +624,8 @@ export default function WanderFeed({ onStart }: { onStart?: () => void }) {
             <FilterChip
               key={f}
               label={f}
-              selected={activeFilter === f}
-              onSelect={() => setActiveFilter(f)}
+              selected={activeFilters.includes(f)}
+              onSelect={() => toggleFilter(f)}
             />
           ))}
         </div>
@@ -644,8 +682,8 @@ export default function WanderFeed({ onStart }: { onStart?: () => void }) {
                 <StoryBubble
                   key={story.id}
                   story={story}
-                  activeFilter={activeFilter}
-                  onTap={setSelectedStory}
+                  activeFilters={activeFilters}
+                  onTap={openStory}
                 />
               ))}
             </div>
@@ -653,46 +691,11 @@ export default function WanderFeed({ onStart }: { onStart?: () => void }) {
         </TransformWrapper>
       </div>
 
-      {/* ── Compose button — opens story submission sheet ───────────────── */}
-      {onStart && (
-        <motion.button
-          whileTap={{ scale: 0.92 }}
-          transition={{ type: "spring", stiffness: 400, damping: 22 }}
-          onClick={onStart}
-          style={{
-            position: "fixed",
-            bottom: 110,
-            right: 24,
-            zIndex: 52,
-            width: 48,
-            height: 48,
-            borderRadius: "50%",
-            backgroundColor: "#282828",
-            border: "none",
-            cursor: "pointer",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            boxShadow: "0 4px 16px rgba(0,0,0,0.22)",
-          }}
-        >
-          <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
-            <path
-              d="M14.85 2.85a1.5 1.5 0 0 1 2.12 2.12l-9.5 9.5-2.83.71.71-2.83 9.5-9.5Z"
-              stroke="#ffffff"
-              strokeWidth="1.5"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            />
-            <path d="M13 4.5l2.5 2.5" stroke="#ffffff" strokeWidth="1.5" strokeLinecap="round"/>
-          </svg>
-        </motion.button>
-      )}
 
       {/* ── Story bottom sheet ───────────────────────────────────────────── */}
       <StoryBottomSheet
         story={selectedStory}
-        onClose={() => setSelectedStory(null)}
+        onClose={closeStory}
       />
     </div>
   );

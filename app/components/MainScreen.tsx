@@ -13,6 +13,7 @@ type Tab = "Wander" | "Collect";
 export default function MainScreen() {
   const [activeTab, setActiveTab]       = useState<Tab>("Wander");
   const [showStorySheet, setShowStorySheet] = useState(false);
+  const [storySheetOpen, setStorySheetOpen] = useState(false);
   // TODO: replace with real data check once backend is wired
   const hasStories = true;
 
@@ -45,7 +46,7 @@ export default function MainScreen() {
           >
             {/* TODO: replace `hasStories` with real data check once backend is wired */}
             {hasStories
-              ? <WanderFeed onStart={() => setShowStorySheet(true)} />
+              ? <WanderFeed onStart={() => setShowStorySheet(true)} onStoryOpen={setStorySheetOpen} />
               : <WanderEmptyState onStart={() => setShowStorySheet(true)} />
             }
           </motion.div>
@@ -65,7 +66,9 @@ export default function MainScreen() {
         )}
       </AnimatePresence>
 
-      <BottomNav active={activeTab} onSwitch={setActiveTab} />
+      {!storySheetOpen && (
+        <BottomNav active={activeTab} onSwitch={setActiveTab} onShare={() => setShowStorySheet(true)} />
+      )}
 
       <StorySheet open={showStorySheet} onClose={() => setShowStorySheet(false)} />
     </motion.div>
