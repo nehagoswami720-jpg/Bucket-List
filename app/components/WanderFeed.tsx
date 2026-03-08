@@ -24,33 +24,118 @@ interface Story {
   h: number;
 }
 
+// ── Bubble placement ───────────────────────────────────────────────────────────
+// Positions are computed at module load via a phyllotaxis spiral so bubbles
+// never overlap. The same function is used when new stories are added.
+
+const PLACE_CX = 1500;
+const PLACE_CY = 1300;
+const BUBBLE_GAP = 14;   // min clear gap between bubble edges (px)
+const BUBBLE_ROT_PAD = 8; // extra padding per side to absorb rotation wiggle
+
+type PlacedRect = { x: number; y: number; w: number; h: number };
+
+function bubbleRect(b: PlacedRect) {
+  return {
+    x1: b.x - BUBBLE_ROT_PAD,
+    y1: b.y - BUBBLE_ROT_PAD,
+    x2: b.x + b.w + BUBBLE_ROT_PAD,
+    y2: b.y + b.h + 12 + BUBBLE_ROT_PAD, // +12 for tail
+  };
+}
+
+function collidesWithAny(placed: PlacedRect[], candidate: PlacedRect): boolean {
+  const c = bubbleRect(candidate);
+  for (const p of placed) {
+    const pr = bubbleRect(p);
+    const clear =
+      c.x2 + BUBBLE_GAP < pr.x1 ||
+      c.x1 > pr.x2 + BUBBLE_GAP ||
+      c.y2 + BUBBLE_GAP < pr.y1 ||
+      c.y1 > pr.y2 + BUBBLE_GAP;
+    if (!clear) return true;
+  }
+  return false;
+}
+
+/**
+ * Find the nearest free slot on a golden-angle spiral centred at (cx, cy).
+ * Call this whenever a new story is submitted — pass all existing placed rects
+ * and the new bubble's dimensions to get a guaranteed non-overlapping position.
+ */
+export function findNextBubblePosition(
+  placed: PlacedRect[],
+  w: number,
+  h: number,
+  cx = PLACE_CX,
+  cy = PLACE_CY,
+): { x: number; y: number } {
+  const golden = 2.39996; // golden angle in radians
+  for (let i = 0; i < 4000; i++) {
+    const r = 60 + 100 * Math.sqrt(i);
+    const θ = i * golden;
+    const x = Math.round(cx + r * Math.cos(θ) - w / 2);
+    const y = Math.round(cy + r * Math.sin(θ) - h / 2);
+    if (!collidesWithAny(placed, { x, y, w, h })) return { x, y };
+  }
+  return { x: cx - w / 2, y: cy - h / 2 };
+}
+
 // ── Story data ─────────────────────────────────────────────────────────────────
-// Bubbles clustered in a ~1000×900px zone centered around (1500, 1200)
-// so at 1x zoom ~4-5 bubbles are visible per screen and panning reveals more
-const STORIES: Story[] = [
-  { id: 1,  title: "the night I ate alone in Tokyo",               category: "Going solo",  x: 1080, y: 960,  rotation: -2,   bobDuration: 3.2, bobDelay: 0,    tailDir: "bc", seed: 42, w: 220, h: 90  },
-  { id: 2,  title: "I took a pottery class knowing nothing",        category: "Learning",    x: 1360, y: 830,  rotation: 1.5,  bobDuration: 2.8, bobDelay: 0.4,  tailDir: "br", seed: 17, w: 240, h: 96  },
-  { id: 3,  title: "solo train ride across Scotland",               category: "Adventure",   x: 1650, y: 1000, rotation: -1,   bobDuration: 3.6, bobDelay: 0.8,  tailDir: "bl", seed: 93, w: 220, h: 90  },
-  { id: 4,  title: "said yes to a stranger's dinner invite",        category: "Connecting",  x: 1220, y: 1150, rotation: 2.5,  bobDuration: 3.0, bobDelay: 0.2,  tailDir: "bc", seed: 55, w: 240, h: 96  },
-  { id: 5,  title: "learned to surf at 32",                         category: "Learning",    x: 1510, y: 1220, rotation: -2.5, bobDuration: 3.4, bobDelay: 1.0,  tailDir: "br", seed: 78, w: 200, h: 82  },
-  { id: 6,  title: "the jazz bar I almost didn't enter",            category: "Going wild",  x: 1780, y: 880,  rotation: 1,    bobDuration: 2.6, bobDelay: 0.6,  tailDir: "bl", seed: 31, w: 240, h: 96  },
-  { id: 7,  title: "drove with no destination for 6 hours",         category: "Adventure",   x: 1920, y: 1100, rotation: -1.5, bobDuration: 3.8, bobDelay: 1.4,  tailDir: "bc", seed: 64, w: 240, h: 96  },
-  { id: 8,  title: "cooked a full meal from a foreign cookbook",    category: "Learning",    x: 1060, y: 1310, rotation: 2,    bobDuration: 3.1, bobDelay: 0.3,  tailDir: "br", seed: 19, w: 240, h: 96  },
-  { id: 9,  title: "watched sunrise from a rooftop alone",          category: "Going solo",  x: 1360, y: 1420, rotation: -0.5, bobDuration: 2.9, bobDelay: 1.2,  tailDir: "bc", seed: 87, w: 240, h: 96  },
-  { id: 10, title: "joined a dance class mid-season",               category: "Learning",    x: 1660, y: 1360, rotation: 1.5,  bobDuration: 3.5, bobDelay: 0.5,  tailDir: "bl", seed: 44, w: 220, h: 90  },
-  { id: 11, title: "ate at a Michelin star restaurant solo",         category: "Going solo",  x: 1890, y: 1290, rotation: -2,   bobDuration: 3.3, bobDelay: 0.9,  tailDir: "bc", seed: 62, w: 240, h: 96  },
-  { id: 12, title: "hitchhiked for the first time",                 category: "Adventure",   x: 1120, y: 1540, rotation: 1,    bobDuration: 2.7, bobDelay: 1.6,  tailDir: "br", seed: 28, w: 220, h: 90  },
-  { id: 13, title: "spent a weekend with no phone",                 category: "Going solo",  x: 1430, y: 1600, rotation: -1.5, bobDuration: 3.7, bobDelay: 0.7,  tailDir: "bl", seed: 73, w: 220, h: 90  },
-  { id: 14, title: "took an improv comedy class",                   category: "Learning",    x: 1720, y: 1550, rotation: 2.5,  bobDuration: 3.0, bobDelay: 0.1,  tailDir: "bc", seed: 11, w: 200, h: 82  },
-  { id: 15, title: "walked across my city in one day",              category: "Adventure",   x: 1960, y: 1470, rotation: -1,   bobDuration: 3.2, bobDelay: 1.1,  tailDir: "br", seed: 96, w: 220, h: 90  },
-  { id: 16, title: "camped alone for the first time",               category: "Adventure",   x: 1090, y: 1730, rotation: 1.5,  bobDuration: 2.8, bobDelay: 0.4,  tailDir: "bl", seed: 39, w: 220, h: 90  },
-  { id: 17, title: "learned to say no to everything for a month",   category: "Going solo",  x: 1370, y: 1810, rotation: -2.5, bobDuration: 3.6, bobDelay: 1.3,  tailDir: "bc", seed: 82, w: 240, h: 96  },
-  { id: 18, title: "went to a concert alone",                       category: "Going wild",  x: 1650, y: 1760, rotation: 2,    bobDuration: 3.1, bobDelay: 0.8,  tailDir: "br", seed: 57, w: 200, h: 82  },
-  { id: 19, title: "moved to a city where I knew nobody",           category: "Connecting",  x: 1880, y: 1670, rotation: -1,   bobDuration: 2.9, bobDelay: 1.5,  tailDir: "bl", seed: 25, w: 240, h: 96  },
-  { id: 20, title: "spent New Year's Eve completely alone",          category: "Going solo",  x: 1250, y: 1670, rotation: 1,    bobDuration: 3.4, bobDelay: 0.2,  tailDir: "bc", seed: 68, w: 240, h: 96  },
+// Positions are computed by buildStories() — edit only the metadata here.
+const STORIES_BASE = [
+  { id: 1,  title: "the night I ate alone in Tokyo",               category: "Going solo"  as Category, rotation: -2,   bobDuration: 3.2, bobDelay: 0,    tailDir: "bc" as TailDir, seed: 42, w: 220, h: 90  },
+  { id: 2,  title: "I took a pottery class knowing nothing",        category: "Learning"    as Category, rotation: 1.5,  bobDuration: 2.8, bobDelay: 0.4,  tailDir: "br" as TailDir, seed: 17, w: 240, h: 96  },
+  { id: 3,  title: "solo train ride across Scotland",               category: "Adventure"   as Category, rotation: -1,   bobDuration: 3.6, bobDelay: 0.8,  tailDir: "bl" as TailDir, seed: 93, w: 220, h: 90  },
+  { id: 4,  title: "said yes to a stranger's dinner invite",        category: "Connecting"  as Category, rotation: 2.5,  bobDuration: 3.0, bobDelay: 0.2,  tailDir: "bc" as TailDir, seed: 55, w: 240, h: 96  },
+  { id: 5,  title: "learned to surf at 32",                         category: "Learning"    as Category, rotation: -2.5, bobDuration: 3.4, bobDelay: 1.0,  tailDir: "br" as TailDir, seed: 78, w: 200, h: 82  },
+  { id: 6,  title: "the jazz bar I almost didn't enter",            category: "Going wild"  as Category, rotation: 1,    bobDuration: 2.6, bobDelay: 0.6,  tailDir: "bl" as TailDir, seed: 31, w: 240, h: 96  },
+  { id: 7,  title: "drove with no destination for 6 hours",         category: "Adventure"   as Category, rotation: -1.5, bobDuration: 3.8, bobDelay: 1.4,  tailDir: "bc" as TailDir, seed: 64, w: 240, h: 96  },
+  { id: 8,  title: "cooked a full meal from a foreign cookbook",    category: "Learning"    as Category, rotation: 2,    bobDuration: 3.1, bobDelay: 0.3,  tailDir: "br" as TailDir, seed: 19, w: 240, h: 96  },
+  { id: 9,  title: "watched sunrise from a rooftop alone",          category: "Going solo"  as Category, rotation: -0.5, bobDuration: 2.9, bobDelay: 1.2,  tailDir: "bc" as TailDir, seed: 87, w: 240, h: 96  },
+  { id: 10, title: "joined a dance class mid-season",               category: "Learning"    as Category, rotation: 1.5,  bobDuration: 3.5, bobDelay: 0.5,  tailDir: "bl" as TailDir, seed: 44, w: 220, h: 90  },
+  { id: 11, title: "ate at a Michelin star restaurant solo",         category: "Going solo"  as Category, rotation: -2,   bobDuration: 3.3, bobDelay: 0.9,  tailDir: "bc" as TailDir, seed: 62, w: 240, h: 96  },
+  { id: 12, title: "hitchhiked for the first time",                 category: "Adventure"   as Category, rotation: 1,    bobDuration: 2.7, bobDelay: 1.6,  tailDir: "br" as TailDir, seed: 28, w: 220, h: 90  },
+  { id: 13, title: "spent a weekend with no phone",                 category: "Going solo"  as Category, rotation: -1.5, bobDuration: 3.7, bobDelay: 0.7,  tailDir: "bl" as TailDir, seed: 73, w: 220, h: 90  },
+  { id: 14, title: "took an improv comedy class",                   category: "Learning"    as Category, rotation: 2.5,  bobDuration: 3.0, bobDelay: 0.1,  tailDir: "bc" as TailDir, seed: 11, w: 200, h: 82  },
+  { id: 15, title: "walked across my city in one day",              category: "Adventure"   as Category, rotation: -1,   bobDuration: 3.2, bobDelay: 1.1,  tailDir: "br" as TailDir, seed: 96, w: 220, h: 90  },
+  { id: 16, title: "camped alone for the first time",               category: "Adventure"   as Category, rotation: 1.5,  bobDuration: 2.8, bobDelay: 0.4,  tailDir: "bl" as TailDir, seed: 39, w: 220, h: 90  },
+  { id: 17, title: "learned to say no to everything for a month",   category: "Going solo"  as Category, rotation: -2.5, bobDuration: 3.6, bobDelay: 1.3,  tailDir: "bc" as TailDir, seed: 82, w: 240, h: 96  },
+  { id: 18, title: "went to a concert alone",                       category: "Going wild"  as Category, rotation: 2,    bobDuration: 3.1, bobDelay: 0.8,  tailDir: "br" as TailDir, seed: 57, w: 200, h: 82  },
+  { id: 19, title: "moved to a city where I knew nobody",           category: "Connecting"  as Category, rotation: -1,   bobDuration: 2.9, bobDelay: 1.5,  tailDir: "bl" as TailDir, seed: 25, w: 240, h: 96  },
+  { id: 20, title: "spent New Year's Eve completely alone",          category: "Going solo"  as Category, rotation: 1,    bobDuration: 3.4, bobDelay: 0.2,  tailDir: "bc" as TailDir, seed: 68, w: 240, h: 96  },
+  { id: 21, title: "ran a half marathon with zero training",         category: "Adventure"   as Category, rotation: -1.5, bobDuration: 3.1, bobDelay: 0.7,  tailDir: "bl" as TailDir, seed: 14, w: 220, h: 90  },
+  { id: 22, title: "tried stand-up comedy at an open mic",           category: "Going wild"  as Category, rotation: 2,    bobDuration: 2.7, bobDelay: 1.1,  tailDir: "bc" as TailDir, seed: 36, w: 240, h: 96  },
+  { id: 23, title: "learned to make sourdough from scratch",         category: "Learning"    as Category, rotation: -2,   bobDuration: 3.5, bobDelay: 0.3,  tailDir: "br" as TailDir, seed: 51, w: 220, h: 90  },
+  { id: 24, title: "booked a flight the night before",               category: "Going wild"  as Category, rotation: 1.5,  bobDuration: 3.3, bobDelay: 0.9,  tailDir: "bl" as TailDir, seed: 79, w: 200, h: 82  },
+  { id: 25, title: "volunteered abroad for a month",                 category: "Connecting"  as Category, rotation: -1,   bobDuration: 2.9, bobDelay: 0.5,  tailDir: "bc" as TailDir, seed: 23, w: 200, h: 82  },
+  { id: 26, title: "finished a book in a single sitting",            category: "Going solo"  as Category, rotation: 2.5,  bobDuration: 3.6, bobDelay: 1.4,  tailDir: "br" as TailDir, seed: 88, w: 220, h: 90  },
+  { id: 27, title: "took a silent retreat for three days",           category: "Going solo"  as Category, rotation: -2.5, bobDuration: 3.0, bobDelay: 0.6,  tailDir: "bl" as TailDir, seed: 47, w: 240, h: 96  },
+  { id: 28, title: "cold-emailed someone I admired — they replied",  category: "Connecting"  as Category, rotation: 1,    bobDuration: 2.8, bobDelay: 1.2,  tailDir: "bc" as TailDir, seed: 61, w: 240, h: 96  },
+  { id: 29, title: "cycled across a country I'd never visited",      category: "Adventure"   as Category, rotation: -1.5, bobDuration: 3.4, bobDelay: 0.1,  tailDir: "br" as TailDir, seed: 33, w: 220, h: 90  },
+  { id: 30, title: "threw a dinner party for strangers",             category: "Connecting"  as Category, rotation: 2,    bobDuration: 3.2, bobDelay: 0.8,  tailDir: "bl" as TailDir, seed: 95, w: 240, h: 96  },
 ];
 
+function buildStories(): Story[] {
+  const placed: PlacedRect[] = [];
+  return STORIES_BASE.map((s) => {
+    const { x, y } = findNextBubblePosition(placed, s.w, s.h);
+    placed.push({ x, y, w: s.w, h: s.h });
+    return { ...s, x, y };
+  });
+}
+
+const STORIES: Story[] = buildStories();
+
 const FILTERS = ["All", "Adventure", "Learning", "Connecting", "Going wild", "Going solo"];
+
+const CATEGORY_COLOR: Record<Category, string> = {
+  Adventure:    "#20500C",
+  Learning:     "#1D49A1",
+  Connecting:   "#D56606",
+  "Going wild": "#6E0476",
+  "Going solo": "#9C1B35",
+};
 
 // ── SVG bubble path ─────────────────────────────────────────────────────────────
 function getBubblePath(w: number, h: number, tailDir: TailDir): string {
@@ -115,9 +200,9 @@ function StoryBubble({
         transformOrigin: "center center",
       }}
     >
-      {/* bob animation */}
+      {/* Primary float — Y with irregular peaks so it never feels mechanical */}
       <motion.div
-        animate={{ y: [0, 3, 0, -3, 0] }}
+        animate={{ y: [0, -5, -3, -7, -2, -5, 0] }}
         transition={{
           duration: story.bobDuration,
           repeat: Infinity,
@@ -126,6 +211,21 @@ function StoryBubble({
           repeatType: "loop",
         }}
       >
+        {/* Secondary drift — X + micro-rotation at a different cadence */}
+        <motion.div
+          animate={{
+            x: [0, 2, 3, 1, -1.5, -2.5, 0],
+            rotate: [0, 0.35, -0.2, 0.45, -0.25, 0.1, 0],
+          }}
+          transition={{
+            duration: story.bobDuration * 1.45,
+            repeat: Infinity,
+            ease: "easeInOut",
+            delay: story.bobDelay * 0.6 + 0.2,
+            repeatType: "loop",
+          }}
+        >
+
         {/* opacity layer for category filter */}
         <motion.div
           animate={{ opacity: visible ? 1 : 0.18 }}
@@ -144,7 +244,7 @@ function StoryBubble({
               height={svgH}
               viewBox={`0 0 ${story.w} ${svgH}`}
               overflow="visible"
-              style={{ display: "block" }}
+              style={{ display: "block", filter: "drop-shadow(0px 4px 18px rgba(0,0,0,0.06))" }}
             >
               <defs>
                 <filter
@@ -198,7 +298,8 @@ function StoryBubble({
                 style={{
                   fontFamily: "'Courier New', Courier, monospace",
                   fontSize: "14px",
-                  color: "#202126",
+                  fontWeight: 700,
+                  color: CATEGORY_COLOR[story.category],
                   textAlign: "center",
                   margin: 0,
                   lineHeight: 1.45,
@@ -210,6 +311,7 @@ function StoryBubble({
             </div>
           </motion.div>
         </motion.div>
+        </motion.div> {/* end secondary drift */}
       </motion.div>
     </div>
   );
