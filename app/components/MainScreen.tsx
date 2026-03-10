@@ -6,6 +6,7 @@ import BottomNav from "./BottomNav";
 import WanderFeed from "./WanderFeed";
 import WanderEmptyState from "./WanderEmptyState";
 import CollectEmptyState from "./CollectEmptyState";
+import CollectGrid from "./CollectGrid";
 import StorySheet from "./StorySheet";
 
 type Tab = "Wander" | "Collect";
@@ -61,7 +62,7 @@ export default function MainScreen() {
             transition={{ duration: 0.25 }}
             style={{ width: "100%" }}
           >
-            <CollectEmptyState />
+            <CollectGrid />
           </motion.div>
         )}
       </AnimatePresence>

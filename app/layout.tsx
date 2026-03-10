@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { DM_Sans, Special_Elite } from "next/font/google";
+import { DM_Sans, Special_Elite, Caveat } from "next/font/google";
 import "./globals.css";
 
 const dmSans = DM_Sans({
@@ -11,6 +11,12 @@ const specialElite = Special_Elite({
   subsets: ["latin"],
   weight: "400",
   variable: "--font-special-elite",
+});
+
+const caveat = Caveat({
+  subsets: ["latin"],
+  weight: ["400", "700"],
+  variable: "--font-caveat",
 });
 
 export const metadata: Metadata = {
@@ -25,7 +31,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body className={`${dmSans.variable} ${specialElite.variable} antialiased`}>{children}</body>
+      <body className={`${dmSans.variable} ${specialElite.variable} ${caveat.variable} antialiased`}>{children}</body>
     </html>
   );
 }
