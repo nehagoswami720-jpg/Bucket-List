@@ -157,7 +157,7 @@ function ListItem({
       style={{ paddingTop: index === 0 ? 0 : 16 }}
     >
       <motion.div
-        animate={{ opacity: checked ? 0.52 : 1, x: checked ? 3 : 0 }}
+        animate={{ opacity: checked ? 0.52 : 1 }}
         transition={{ duration: 0.3, ease: [0.22, 1, 0.36, 1] }}
         style={{ display: "flex", alignItems: "flex-start", gap: 8 }}
       >
@@ -208,7 +208,7 @@ function ListItem({
                   left: 0,
                   right: 0,
                   height: 1.5,
-                  backgroundColor: "#7EC8A0",
+                  backgroundColor: "#20500C",
                   transformOrigin: "left center",
                   pointerEvents: "none",
                   borderRadius: 1,

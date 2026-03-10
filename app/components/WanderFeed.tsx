@@ -642,18 +642,16 @@ export default function WanderFeed({
           overflow: "hidden",
           touchAction: "none",
           backgroundColor: "#F5F0E8",
-          backgroundImage: "radial-gradient(circle, #E0D5C5 1.2px, transparent 1.2px)",
-          backgroundSize: "24px 24px",
         }}
       >
         <TransformWrapper
           ref={transformRef}
           initialScale={1}
-          minScale={1}
-          maxScale={1}
+          minScale={0.3}
+          maxScale={2.5}
           limitToBounds={false}
-          pinch={{ disabled: true }}
-          wheel={{ disabled: true }}
+          pinch={{ disabled: false }}
+          wheel={{ disabled: false, smoothStep: 0.001 }}
           doubleClick={{ disabled: true }}
           panning={{ velocityDisabled: false }}
         >
@@ -664,6 +662,7 @@ export default function WanderFeed({
               backgroundColor: "#F5F0E8",
               backgroundImage: "radial-gradient(circle, #E0D5C5 1.2px, transparent 1.2px)",
               backgroundSize: "24px 24px",
+              backgroundAttachment: "local",
             }}
           >
             {/* 3000×3000 canvas */}
@@ -672,10 +671,6 @@ export default function WanderFeed({
                 width: 3000,
                 height: 3000,
                 position: "relative",
-                backgroundColor: "#F5F0E8",
-                backgroundImage:
-                  "radial-gradient(circle, #E0D5C5 1.2px, transparent 1.2px)",
-                backgroundSize: "24px 24px",
               }}
             >
               {STORIES.map((story) => (
