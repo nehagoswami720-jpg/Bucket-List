@@ -3,22 +3,20 @@
 import { useRef, useEffect, useState, useCallback, Fragment } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 
-const MAX       = 200;
+const MAX       = 280;
 const MAX_TITLE = 80;
-const TOTAL     = 6;
+const TOTAL     = 5;
 
 const QUESTIONS = [
-  "What's something you tried that you wish someone had told you about sooner?",
-  "Take us there. What do you remember most about that moment?",
-  "What made this worth it?",
-  "If a friend texted you right now asking how to try this — what would you tell them?",
+  "What's something you tried that you wish someone had told you sooner, and what do you remember most about that moment?",
+  "What made this experience worth it?",
+  "If a friend texted you right now asking how to try this, what would you tell them? (Optional)",
   "Almost done. Just a few things so the right person stumbles onto this.",
   "Give your story a title. Make it one they can't ignore.",
 ];
 
 const PLACEHOLDERS = [
-  { lines: ["could be a trip, a skill, a meal, a", "moment, anything you lived and", "loved..."] },
-  { lines: ["the part of the story you always tell", "first, when someone asks..."] },
+  { lines: ["could be a trip, a skill, a meal, a", "moment. the part you always tell", "first when someone asks..."] },
   { lines: ["the thing you didn't expect to feel..."] },
   { lines: ["make it easy for them to start..."] },
   { lines: ["choose what your story is about.", "pick what fits. more than one is fine."] },
