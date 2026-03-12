@@ -461,16 +461,16 @@ export default function StorySheet({
     const SR = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
     console.log("SR available:", !!SR, { SpeechRecognition: !!(window as any).SpeechRecognition, webkitSpeechRecognition: !!(window as any).webkitSpeechRecognition });
     if (!SR) {
-      // Speech API unavailable — usually means non-HTTPS context
-      setMicPermissionDenied(true);
-      setSpeechSupported(false);
+      setSpeechSupported(false); // hides mic button
       return;
     }
 
     const recognition = new SR();
     recognition.continuous = true;
     recognition.interimResults = true;
-    recognition.lang = "en-US";
+    const supportedLocales = ["en-GB", "en-AU", "en-US"];
+    const browserLang = navigator.language || "en-US";
+    recognition.lang = supportedLocales.find((l) => browserLang.startsWith(l)) ?? "en-US";
 
     baseTextRef.current = value;
     finalTranscriptRef.current = "";
@@ -509,9 +509,6 @@ export default function StorySheet({
 
     recognition.onerror = (event: any) => {
       console.log("recognition error:", event.error);
-      if (event.error === "not-allowed" || event.error === "permission-denied") {
-        setMicPermissionDenied(true);
-      }
       setIsRecording(false);
       isRecordingRef.current = false;
       setSettledWords([]);
@@ -793,7 +790,7 @@ export default function StorySheet({
 
                   {/* Mic + char count — 8px below textarea */}
                   <div style={{ marginTop: 8, display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-                    {!isLastStep && speechSupported !== false
+                    {!isLastStep && speechSupported
                       ? <MicButton isRecording={isRecording} onToggle={handleMicToggle} />
                       : <div style={{ width: 44 }} />
                     }
@@ -811,26 +808,6 @@ export default function StorySheet({
                     </motion.span>
                   </div>
 
-                  <AnimatePresence>
-                    {micPermissionDenied && !isLastStep && (
-                      <motion.p
-                        initial={{ opacity: 0, y: -4 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        exit={{ opacity: 0, y: -4 }}
-                        transition={{ duration: 0.2 }}
-                        style={{
-                          fontFamily: "'Courier New', Courier, monospace",
-                          fontSize: 11,
-                          letterSpacing: "-0.03em",
-                          color: "#9a9a9a",
-                          margin: "2px 0 0",
-                          padding: 0,
-                        }}
-                      >
-                        voice input needs https
-                      </motion.p>
-                    )}
-                  </AnimatePresence>
                 </div>
               )}
             </motion.div>

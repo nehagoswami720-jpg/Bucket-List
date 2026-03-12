@@ -1,20 +1,32 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import BottomNav from "./BottomNav";
 import WanderFeed from "./WanderFeed";
 import WanderEmptyState from "./WanderEmptyState";
-import CollectEmptyState from "./CollectEmptyState";
 import CollectGrid from "./CollectGrid";
 import StorySheet from "./StorySheet";
+import type { Story } from "../lib/storyTypes";
 
 type Tab = "Wander" | "Collect";
 
 export default function MainScreen() {
-  const [activeTab, setActiveTab]       = useState<Tab>("Wander");
+  const [activeTab, setActiveTab]           = useState<Tab>("Wander");
   const [showStorySheet, setShowStorySheet] = useState(false);
   const [storySheetOpen, setStorySheetOpen] = useState(false);
+  const [savedStories, setSavedStories]     = useState<Story[]>([]);
+
+  const savedStoryIds = useMemo(() => new Set(savedStories.map((s) => s.id)), [savedStories]);
+
+  function handleSaveToggle(story: Story) {
+    setSavedStories((prev) =>
+      prev.some((s) => s.id === story.id)
+        ? prev.filter((s) => s.id !== story.id)
+        : [...prev, story]
+    );
+  }
+
   // TODO: replace with real data check once backend is wired
   const hasStories = true;
 
@@ -45,9 +57,15 @@ export default function MainScreen() {
             transition={{ duration: 0.25 }}
             style={{ width: "100%" }}
           >
-            {/* TODO: replace `hasStories` with real data check once backend is wired */}
             {hasStories
-              ? <WanderFeed onStart={() => setShowStorySheet(true)} onStoryOpen={setStorySheetOpen} />
+              ? (
+                <WanderFeed
+                  onStart={() => setShowStorySheet(true)}
+                  onStoryOpen={setStorySheetOpen}
+                  savedStoryIds={savedStoryIds}
+                  onSaveToggle={handleSaveToggle}
+                />
+              )
               : <WanderEmptyState onStart={() => setShowStorySheet(true)} />
             }
           </motion.div>
@@ -62,7 +80,11 @@ export default function MainScreen() {
             transition={{ duration: 0.25 }}
             style={{ width: "100%" }}
           >
-            <CollectGrid />
+            <CollectGrid
+              savedStories={savedStories}
+              onSaveToggle={handleSaveToggle}
+              onStoryOpen={setStorySheetOpen}
+            />
           </motion.div>
         )}
       </AnimatePresence>

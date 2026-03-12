@@ -2,27 +2,14 @@
 
 import { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence, useAnimationControls } from "framer-motion";
+// AnimatePresence + useAnimationControls used in FilterChip
 import { TransformWrapper, TransformComponent } from "react-zoom-pan-pinch";
 import type { ReactZoomPanPinchRef } from "react-zoom-pan-pinch";
+import StoryBottomSheet from "./StoryBottomSheet";
+import type { Story, Category, TailDir } from "../lib/storyTypes";
+import { CATEGORY_COLOR } from "../lib/storyTypes";
 
-// ── Types ──────────────────────────────────────────────────────────────────────
-type TailDir = "bl" | "bc" | "br";
-type Category = "Adventure" | "Learning" | "Connecting" | "Going wild" | "Going solo";
-
-interface Story {
-  id: number;
-  title: string;
-  category: Category;
-  x: number;
-  y: number;
-  rotation: number;
-  bobDuration: number;
-  bobDelay: number;
-  tailDir: TailDir;
-  seed: number;
-  w: number;
-  h: number;
-}
+export type { Story };
 
 // ── Bubble placement ───────────────────────────────────────────────────────────
 // Positions are computed at module load via a phyllotaxis spiral so bubbles
@@ -128,14 +115,6 @@ function buildStories(): Story[] {
 const STORIES: Story[] = buildStories();
 
 const FILTERS = ["All", "Adventure", "Learning", "Connecting", "Going wild", "Going solo"];
-
-const CATEGORY_COLOR: Record<Category, string> = {
-  Adventure:    "#20500C",
-  Learning:     "#1D49A1",
-  Connecting:   "#D56606",
-  "Going wild": "#6E0476",
-  "Going solo": "#9C1B35",
-};
 
 // ── SVG bubble path ─────────────────────────────────────────────────────────────
 function getBubblePath(w: number, h: number, tailDir: TailDir): string {
@@ -317,177 +296,6 @@ function StoryBubble({
   );
 }
 
-// ── Story bottom sheet ─────────────────────────────────────────────────────────
-function StoryBottomSheet({
-  story,
-  onClose,
-}: {
-  story: Story | null;
-  onClose: () => void;
-}) {
-  return (
-    <AnimatePresence>
-      {story && (
-        <>
-          {/* Backdrop */}
-          <motion.div
-            key="sheet-backdrop"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0, transition: { duration: 0.42, ease: "easeIn" } }}
-            transition={{ duration: 0.5, ease: "easeOut" }}
-            onClick={onClose}
-            style={{
-              position: "fixed",
-              inset: 0,
-              backgroundColor: "rgba(0,0,0,0.32)",
-              backdropFilter: "blur(3px)",
-              WebkitBackdropFilter: "blur(3px)",
-              zIndex: 200,
-            }}
-          />
-
-          {/* Sheet */}
-          <motion.div
-            key="sheet"
-            initial={{ y: "100%", borderRadius: "28px 28px 0 0" }}
-            animate={{ y: 0, borderRadius: "20px 20px 0 0" }}
-            exit={{ y: "100%", transition: { type: "spring", stiffness: 180, damping: 28 } }}
-            drag="y"
-            dragConstraints={{ top: 0 }}
-            dragElastic={{ top: 0, bottom: 0.3 }}
-            onDragEnd={(_, info) => {
-              if (info.offset.y > 80 || info.velocity.y > 500) onClose();
-            }}
-            transition={{ type: "spring", stiffness: 200, damping: 30 }}
-            style={{
-              position: "fixed",
-              bottom: 0,
-              left: 0,
-              right: 0,
-              height: "68vh",
-              backgroundColor: "#F5F0E8",
-              borderRadius: "20px 20px 0 0",
-              zIndex: 201,
-              display: "flex",
-              flexDirection: "column",
-              boxSizing: "border-box",
-              overflowY: "auto",
-            }}
-          >
-            {/* Drag handle */}
-            <div
-              style={{
-                display: "flex",
-                justifyContent: "center",
-                paddingTop: 14,
-                paddingBottom: 6,
-                flexShrink: 0,
-                cursor: "pointer",
-              }}
-              onClick={onClose}
-            >
-              <motion.div
-                whileHover={{ scaleX: 1.2, backgroundColor: "rgba(0,0,0,0.3)" }}
-                style={{
-                  width: 38,
-                  height: 4,
-                  borderRadius: 99,
-                  backgroundColor: "rgba(0,0,0,0.18)",
-                }}
-              />
-            </div>
-
-            <motion.div
-              initial={{ opacity: 0, y: 16 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.22, duration: 0.55, ease: [0.22, 1, 0.36, 1] }}
-              style={{ padding: "12px 24px 48px", flex: 1, display: "flex", flexDirection: "column" }}
-            >
-              {/* Category pill */}
-              <div
-                style={{
-                  display: "inline-flex",
-                  alignSelf: "flex-start",
-                  backgroundColor: CATEGORY_COLOR[story.category],
-                  borderRadius: 6,
-                  padding: "4px 10px",
-                  marginBottom: 14,
-                }}
-              >
-                <span
-                  style={{
-                    fontFamily: "Helvetica, Arial, sans-serif",
-                    fontSize: "12px",
-                    fontWeight: 600,
-                    color: "#ffffff",
-                    letterSpacing: "0.01em",
-                  }}
-                >
-                  {story.category}
-                </span>
-              </div>
-
-              {/* Title */}
-              <h2
-                style={{
-                  fontFamily: "Helvetica, Arial, sans-serif",
-                  fontSize: "24px",
-                  fontWeight: 700,
-                  color: "#2A2A2A",
-                  lineHeight: 1.3,
-                  letterSpacing: "-0.02em",
-                  margin: "0 0 20px",
-                }}
-              >
-                {story.title}
-              </h2>
-
-              {/* Story body — placeholder */}
-              <p
-                style={{
-                  fontFamily: "'Courier New', Courier, monospace",
-                  fontSize: "16px",
-                  color: "#1E1E1E",
-                  lineHeight: 1.55,
-                  margin: 0,
-                }}
-              >
-                Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do
-                eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim
-                ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut
-                aliquip ex ea commodo consequat.
-                <br /><br />
-                Duis aute irure dolor in reprehenderit in voluptate velit esse cillum
-                dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat
-                non proident, sunt in culpa qui officia deserunt mollit anim id est
-                laborum.
-              </p>
-
-              {/* Save / pushpin */}
-              <div style={{ marginTop: "auto", display: "flex", justifyContent: "flex-end", paddingTop: 24 }}>
-                <motion.button
-                  whileTap={{ scale: 0.88, rotate: -20 }}
-                  transition={{ type: "spring", stiffness: 300, damping: 15 }}
-                  style={{
-                    background: "none",
-                    border: "none",
-                    cursor: "pointer",
-                    padding: 8,
-                    fontSize: 22,
-                  }}
-                >
-                  📌
-                </motion.button>
-              </div>
-            </motion.div>
-          </motion.div>
-        </>
-      )}
-    </AnimatePresence>
-  );
-}
-
 // ── Filter chip ────────────────────────────────────────────────────────────────
 function FilterChip({
   label,
@@ -544,9 +352,13 @@ function FilterChip({
 export default function WanderFeed({
   onStart,
   onStoryOpen,
+  savedStoryIds,
+  onSaveToggle,
 }: {
   onStart?: () => void;
   onStoryOpen?: (open: boolean) => void;
+  savedStoryIds?: Set<number>;
+  onSaveToggle?: (story: Story) => void;
 }) {
   const [activeFilters, setActiveFilters] = useState<string[]>(["All"]);
 
@@ -690,6 +502,8 @@ export default function WanderFeed({
       {/* ── Story bottom sheet ───────────────────────────────────────────── */}
       <StoryBottomSheet
         story={selectedStory}
+        isSaved={selectedStory ? (savedStoryIds?.has(selectedStory.id) ?? false) : false}
+        onSaveToggle={() => selectedStory && onSaveToggle?.(selectedStory)}
         onClose={closeStory}
       />
     </div>
