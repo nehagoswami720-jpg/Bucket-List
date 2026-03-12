@@ -2,7 +2,7 @@
 
 import { useState, useRef, useEffect } from "react";
 import { motion, AnimatePresence, useAnimationControls } from "framer-motion";
-import { Story, CATEGORY_COLOR } from "../lib/storyTypes";
+import { DBStory, CATEGORY_COLOR } from "../lib/storyTypes";
 
 export default function StoryBottomSheet({
   story,
@@ -10,7 +10,7 @@ export default function StoryBottomSheet({
   onSaveToggle,
   onClose,
 }: {
-  story: Story | null;
+  story: DBStory | null;
   isSaved: boolean;
   onSaveToggle: () => void;
   onClose: () => void;
@@ -166,26 +166,21 @@ export default function StoryBottomSheet({
                   {story.title}
                 </h2>
 
-                {/* Story body — placeholder */}
-                <p
-                  style={{
-                    fontFamily: "'Courier New', Courier, monospace",
-                    fontSize: "16px",
-                    color: "#1E1E1E",
-                    lineHeight: 1.55,
-                    margin: 0,
-                  }}
-                >
-                  Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do
-                  eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim
-                  ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut
-                  aliquip ex ea commodo consequat.
-                  <br /><br />
-                  Duis aute irure dolor in reprehenderit in voluptate velit esse cillum
-                  dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat
-                  non proident, sunt in culpa qui officia deserunt mollit anim id est
-                  laborum.
-                </p>
+                {/* Story body */}
+                <div style={{
+                  fontFamily: "'Courier New', Courier, monospace",
+                  fontSize: "16px",
+                  color: "#1E1E1E",
+                  lineHeight: 1.6,
+                }}>
+                  <p style={{ margin: "0 0 20px" }}>{story.moment}</p>
+                  <p style={{ margin: "0 0 20px" }}>{story.worth_it}</p>
+                  {story.advice && (
+                    <p style={{ margin: 0, color: "#555555", fontStyle: "italic" }}>
+                      {story.advice}
+                    </p>
+                  )}
+                </div>
 
                 {/* Save button */}
                 <div style={{ marginTop: 32, display: "flex", justifyContent: "center" }}>

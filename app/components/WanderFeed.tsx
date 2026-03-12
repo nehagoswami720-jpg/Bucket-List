@@ -6,8 +6,10 @@ import { motion, AnimatePresence, useAnimationControls } from "framer-motion";
 import { TransformWrapper, TransformComponent } from "react-zoom-pan-pinch";
 import type { ReactZoomPanPinchRef } from "react-zoom-pan-pinch";
 import StoryBottomSheet from "./StoryBottomSheet";
-import type { Story, Category, TailDir } from "../lib/storyTypes";
+import WanderEmptyState from "./WanderEmptyState";
+import type { Story, DBStory, Category, TailDir } from "../lib/storyTypes";
 import { CATEGORY_COLOR } from "../lib/storyTypes";
+import { fetchStories } from "../lib/api";
 
 export type { Story };
 
@@ -68,53 +70,46 @@ export function findNextBubblePosition(
   return { x: cx - w / 2, y: cy - h / 2 };
 }
 
-// ── Story data ─────────────────────────────────────────────────────────────────
-// Positions are computed by buildStories() — edit only the metadata here.
-const STORIES_BASE = [
-  { id: 1,  title: "the night I ate alone in Tokyo",               category: "Going solo"  as Category, rotation: -2,   bobDuration: 3.2, bobDelay: 0,    tailDir: "bc" as TailDir, seed: 42, w: 220, h: 90  },
-  { id: 2,  title: "I took a pottery class knowing nothing",        category: "Learning"    as Category, rotation: 1.5,  bobDuration: 2.8, bobDelay: 0.4,  tailDir: "br" as TailDir, seed: 17, w: 240, h: 96  },
-  { id: 3,  title: "solo train ride across Scotland",               category: "Adventure"   as Category, rotation: -1,   bobDuration: 3.6, bobDelay: 0.8,  tailDir: "bl" as TailDir, seed: 93, w: 220, h: 90  },
-  { id: 4,  title: "said yes to a stranger's dinner invite",        category: "Connecting"  as Category, rotation: 2.5,  bobDuration: 3.0, bobDelay: 0.2,  tailDir: "bc" as TailDir, seed: 55, w: 240, h: 96  },
-  { id: 5,  title: "learned to surf at 32",                         category: "Learning"    as Category, rotation: -2.5, bobDuration: 3.4, bobDelay: 1.0,  tailDir: "br" as TailDir, seed: 78, w: 200, h: 82  },
-  { id: 6,  title: "the jazz bar I almost didn't enter",            category: "Going wild"  as Category, rotation: 1,    bobDuration: 2.6, bobDelay: 0.6,  tailDir: "bl" as TailDir, seed: 31, w: 240, h: 96  },
-  { id: 7,  title: "drove with no destination for 6 hours",         category: "Adventure"   as Category, rotation: -1.5, bobDuration: 3.8, bobDelay: 1.4,  tailDir: "bc" as TailDir, seed: 64, w: 240, h: 96  },
-  { id: 8,  title: "cooked a full meal from a foreign cookbook",    category: "Learning"    as Category, rotation: 2,    bobDuration: 3.1, bobDelay: 0.3,  tailDir: "br" as TailDir, seed: 19, w: 240, h: 96  },
-  { id: 9,  title: "watched sunrise from a rooftop alone",          category: "Going solo"  as Category, rotation: -0.5, bobDuration: 2.9, bobDelay: 1.2,  tailDir: "bc" as TailDir, seed: 87, w: 240, h: 96  },
-  { id: 10, title: "joined a dance class mid-season",               category: "Learning"    as Category, rotation: 1.5,  bobDuration: 3.5, bobDelay: 0.5,  tailDir: "bl" as TailDir, seed: 44, w: 220, h: 90  },
-  { id: 11, title: "ate at a Michelin star restaurant solo",         category: "Going solo"  as Category, rotation: -2,   bobDuration: 3.3, bobDelay: 0.9,  tailDir: "bc" as TailDir, seed: 62, w: 240, h: 96  },
-  { id: 12, title: "hitchhiked for the first time",                 category: "Adventure"   as Category, rotation: 1,    bobDuration: 2.7, bobDelay: 1.6,  tailDir: "br" as TailDir, seed: 28, w: 220, h: 90  },
-  { id: 13, title: "spent a weekend with no phone",                 category: "Going solo"  as Category, rotation: -1.5, bobDuration: 3.7, bobDelay: 0.7,  tailDir: "bl" as TailDir, seed: 73, w: 220, h: 90  },
-  { id: 14, title: "took an improv comedy class",                   category: "Learning"    as Category, rotation: 2.5,  bobDuration: 3.0, bobDelay: 0.1,  tailDir: "bc" as TailDir, seed: 11, w: 200, h: 82  },
-  { id: 15, title: "walked across my city in one day",              category: "Adventure"   as Category, rotation: -1,   bobDuration: 3.2, bobDelay: 1.1,  tailDir: "br" as TailDir, seed: 96, w: 220, h: 90  },
-  { id: 16, title: "camped alone for the first time",               category: "Adventure"   as Category, rotation: 1.5,  bobDuration: 2.8, bobDelay: 0.4,  tailDir: "bl" as TailDir, seed: 39, w: 220, h: 90  },
-  { id: 17, title: "learned to say no to everything for a month",   category: "Going solo"  as Category, rotation: -2.5, bobDuration: 3.6, bobDelay: 1.3,  tailDir: "bc" as TailDir, seed: 82, w: 240, h: 96  },
-  { id: 18, title: "went to a concert alone",                       category: "Going wild"  as Category, rotation: 2,    bobDuration: 3.1, bobDelay: 0.8,  tailDir: "br" as TailDir, seed: 57, w: 200, h: 82  },
-  { id: 19, title: "moved to a city where I knew nobody",           category: "Connecting"  as Category, rotation: -1,   bobDuration: 2.9, bobDelay: 1.5,  tailDir: "bl" as TailDir, seed: 25, w: 240, h: 96  },
-  { id: 20, title: "spent New Year's Eve completely alone",          category: "Going solo"  as Category, rotation: 1,    bobDuration: 3.4, bobDelay: 0.2,  tailDir: "bc" as TailDir, seed: 68, w: 240, h: 96  },
-  { id: 21, title: "ran a half marathon with zero training",         category: "Adventure"   as Category, rotation: -1.5, bobDuration: 3.1, bobDelay: 0.7,  tailDir: "bl" as TailDir, seed: 14, w: 220, h: 90  },
-  { id: 22, title: "tried stand-up comedy at an open mic",           category: "Going wild"  as Category, rotation: 2,    bobDuration: 2.7, bobDelay: 1.1,  tailDir: "bc" as TailDir, seed: 36, w: 240, h: 96  },
-  { id: 23, title: "learned to make sourdough from scratch",         category: "Learning"    as Category, rotation: -2,   bobDuration: 3.5, bobDelay: 0.3,  tailDir: "br" as TailDir, seed: 51, w: 220, h: 90  },
-  { id: 24, title: "booked a flight the night before",               category: "Going wild"  as Category, rotation: 1.5,  bobDuration: 3.3, bobDelay: 0.9,  tailDir: "bl" as TailDir, seed: 79, w: 200, h: 82  },
-  { id: 25, title: "volunteered abroad for a month",                 category: "Connecting"  as Category, rotation: -1,   bobDuration: 2.9, bobDelay: 0.5,  tailDir: "bc" as TailDir, seed: 23, w: 200, h: 82  },
-  { id: 26, title: "finished a book in a single sitting",            category: "Going solo"  as Category, rotation: 2.5,  bobDuration: 3.6, bobDelay: 1.4,  tailDir: "br" as TailDir, seed: 88, w: 220, h: 90  },
-  { id: 27, title: "took a silent retreat for three days",           category: "Going solo"  as Category, rotation: -2.5, bobDuration: 3.0, bobDelay: 0.6,  tailDir: "bl" as TailDir, seed: 47, w: 240, h: 96  },
-  { id: 28, title: "cold-emailed someone I admired — they replied",  category: "Connecting"  as Category, rotation: 1,    bobDuration: 2.8, bobDelay: 1.2,  tailDir: "bc" as TailDir, seed: 61, w: 240, h: 96  },
-  { id: 29, title: "cycled across a country I'd never visited",      category: "Adventure"   as Category, rotation: -1.5, bobDuration: 3.4, bobDelay: 0.1,  tailDir: "br" as TailDir, seed: 33, w: 220, h: 90  },
-  { id: 30, title: "threw a dinner party for strangers",             category: "Connecting"  as Category, rotation: 2,    bobDuration: 3.2, bobDelay: 0.8,  tailDir: "bl" as TailDir, seed: 95, w: 240, h: 96  },
-];
+const FILTERS = ["All", "Adventure", "Learning", "Connecting", "Going wild", "Going solo"];
 
-function buildStories(): Story[] {
-  const placed: PlacedRect[] = [];
-  return STORIES_BASE.map((s) => {
-    const { x, y } = findNextBubblePosition(placed, s.w, s.h);
-    placed.push({ x, y, w: s.w, h: s.h });
-    return { ...s, x, y };
-  });
+// ── DB story → canvas story ─────────────────────────────────────────────────────
+// Deterministically derives all visual/canvas props from the story UUID so the
+// same story always renders at the same position with the same motion.
+function hashStr(s: string): number {
+  let h = 5381;
+  for (let i = 0; i < s.length; i++) h = ((h << 5) + h + s.charCodeAt(i)) | 0;
+  return Math.abs(h);
 }
 
-const STORIES: Story[] = buildStories();
+const ROTATIONS   = [-2.5, -2, -1.5, -1, -0.5, 0.5, 1, 1.5, 2, 2.5];
+const TAIL_DIRS   = ["bl", "bc", "br"] as TailDir[];
+const BUBBLE_SIZES = [{ w: 200, h: 82 }, { w: 220, h: 90 }, { w: 240, h: 96 }];
 
-const FILTERS = ["All", "Adventure", "Learning", "Connecting", "Going wild", "Going solo"];
+function dbToCanvasStory(db: DBStory, placed: PlacedRect[]): Story {
+  const h  = hashStr(db.id);
+  const sz = BUBBLE_SIZES[h % BUBBLE_SIZES.length];
+  const { x, y } = findNextBubblePosition(placed, sz.w, sz.h);
+  return {
+    ...db,
+    x, y,
+    rotation:    ROTATIONS[h % ROTATIONS.length],
+    bobDuration: 2.6 + (h % 15) * 0.1,
+    bobDelay:    (h % 16) * 0.1,
+    tailDir:     TAIL_DIRS[h % 3],
+    seed:        h % 100,
+    w: sz.w,
+    h: sz.h,
+  };
+}
+
+function buildCanvasStories(dbStories: DBStory[]): Story[] {
+  const placed: PlacedRect[] = [];
+  return dbStories.map((db) => {
+    const story = dbToCanvasStory(db, placed);
+    placed.push({ x: story.x, y: story.y, w: story.w, h: story.h });
+    return story;
+  });
+}
 
 // ── SVG bubble path ─────────────────────────────────────────────────────────────
 function getBubblePath(w: number, h: number, tailDir: TailDir): string {
@@ -354,19 +349,37 @@ export default function WanderFeed({
   onStoryOpen,
   savedStoryIds,
   onSaveToggle,
+  refreshKey,
 }: {
   onStart?: () => void;
   onStoryOpen?: (open: boolean) => void;
-  savedStoryIds?: Set<number>;
-  onSaveToggle?: (story: Story) => void;
+  savedStoryIds?: Set<string>;
+  onSaveToggle?: (story: DBStory) => void;
+  refreshKey?: number;
 }) {
+  const [stories, setStories]             = useState<Story[]>([]);
+  const [loading, setLoading]             = useState(true);
   const [activeFilters, setActiveFilters] = useState<string[]>(["All"]);
+  const [selectedStory, setSelectedStory] = useState<Story | null>(null);
+  const transformRef = useRef<ReactZoomPanPinchRef>(null);
+
+  // Fetch stories from Supabase
+  async function loadStories() {
+    setLoading(true);
+    try {
+      const dbStories = await fetchStories();
+      setStories(buildCanvasStories(dbStories));
+    } catch (e) {
+      console.error("failed to load stories:", e);
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  useEffect(() => { loadStories(); }, [refreshKey]);
 
   function toggleFilter(f: string) {
-    if (f === "All") {
-      setActiveFilters(["All"]);
-      return;
-    }
+    if (f === "All") { setActiveFilters(["All"]); return; }
     setActiveFilters((prev) => {
       const withoutAll = prev.filter((x) => x !== "All");
       const already = withoutAll.includes(f);
@@ -374,33 +387,24 @@ export default function WanderFeed({
       return next.length === 0 ? ["All"] : next;
     });
   }
-  const [selectedStory, setSelectedStory] = useState<Story | null>(null);
-  const transformRef = useRef<ReactZoomPanPinchRef>(null);
 
-  function openStory(story: Story) {
-    setSelectedStory(story);
-    onStoryOpen?.(true);
-  }
+  function openStory(story: Story) { setSelectedStory(story); onStoryOpen?.(true); }
+  function closeStory()             { setSelectedStory(null);  onStoryOpen?.(false); }
 
-  function closeStory() {
-    setSelectedStory(null);
-    onStoryOpen?.(false);
-  }
-
-  // Drop user at a random spot within the bubble cluster on each page load
+  // Drop user at a random spot within the bubble cluster on first load
   useEffect(() => {
-    // Bubbles are clustered around x:1080–1950, y:860–1800
-    const canvasX = 1200 + Math.random() * 600; // 1200–1800
-    const canvasY = 1000 + Math.random() * 500; // 1000–1500
+    if (stories.length === 0) return;
+    const canvasX = 1200 + Math.random() * 600;
+    const canvasY = 1000 + Math.random() * 500;
     const vw = window.innerWidth;
     const vh = window.innerHeight - 70 - 82;
-    transformRef.current?.setTransform(
-      -(canvasX - vw / 2),
-      -(canvasY - vh / 2),
-      1,
-      0,
-    );
-  }, []);
+    transformRef.current?.setTransform(-(canvasX - vw / 2), -(canvasY - vh / 2), 1, 0);
+  }, [stories.length > 0]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Empty / loading state
+  if (!loading && stories.length === 0) {
+    return <WanderEmptyState onStart={onStart} />;
+  }
 
   return (
     <div style={{
@@ -410,94 +414,48 @@ export default function WanderFeed({
       backgroundSize: "24px 24px",
     }}>
 
-      {/* ── Filter chips — fixed at top ──────────────────────────────────── */}
-      <div
-        style={{
-          position: "absolute",
-          top: 0, left: 0, right: 0,
-          paddingTop: 16,
-          zIndex: 4,
-        }}
-      >
-        <div
-          style={{
-            display: "flex",
-            flexDirection: "row",
-            gap: 10,
-            paddingLeft: 16,
-            paddingRight: 16,
-            paddingBottom: 12,
-            overflowX: "auto",
-            scrollbarWidth: "none",
-            msOverflowStyle: "none",
-          } as React.CSSProperties}
-        >
+      {/* ── Filter chips ─────────────────────────────────────────────────── */}
+      <div style={{ position: "absolute", top: 0, left: 0, right: 0, paddingTop: 16, zIndex: 4 }}>
+        <div style={{
+          display: "flex", flexDirection: "row", gap: 10,
+          paddingLeft: 16, paddingRight: 16, paddingBottom: 12,
+          overflowX: "auto", scrollbarWidth: "none", msOverflowStyle: "none",
+        } as React.CSSProperties}>
           {FILTERS.map((f) => (
-            <FilterChip
-              key={f}
-              label={f}
-              selected={activeFilters.includes(f)}
-              onSelect={() => toggleFilter(f)}
-            />
+            <FilterChip key={f} label={f} selected={activeFilters.includes(f)} onSelect={() => toggleFilter(f)} />
           ))}
         </div>
       </div>
 
       {/* ── Infinite pan canvas ──────────────────────────────────────────── */}
-      <div
-        style={{
-          position: "absolute",
-          top: 70,
-          left: 0,
-          right: 0,
-          bottom: 82,
-          overflow: "hidden",
-          touchAction: "none",
-          backgroundColor: "#F5F0E8",
-        }}
-      >
+      <div style={{
+        position: "absolute", top: 70, left: 0, right: 0, bottom: 82,
+        overflow: "hidden", touchAction: "none", backgroundColor: "#F5F0E8",
+      }}>
         <TransformWrapper
           ref={transformRef}
-          initialScale={1}
-          minScale={0.3}
-          maxScale={2.5}
+          initialScale={1} minScale={0.3} maxScale={2.5}
           limitToBounds={false}
           pinch={{ disabled: false }}
           wheel={{ disabled: false, smoothStep: 0.001 }}
           doubleClick={{ disabled: true }}
           panning={{ velocityDisabled: false }}
         >
-          <TransformComponent
-            wrapperStyle={{
-              width: "100%",
-              height: "100%",
-              backgroundColor: "#F5F0E8",
-              backgroundImage: "radial-gradient(circle, #E0D5C5 1.2px, transparent 1.2px)",
-              backgroundSize: "24px 24px",
-              backgroundAttachment: "local",
-            }}
-          >
-            {/* 3000×3000 canvas */}
-            <div
-              style={{
-                width: 3000,
-                height: 3000,
-                position: "relative",
-              }}
-            >
-              {STORIES.map((story) => (
-                <StoryBubble
-                  key={story.id}
-                  story={story}
-                  activeFilters={activeFilters}
-                  onTap={openStory}
-                />
+          <TransformComponent wrapperStyle={{
+            width: "100%", height: "100%",
+            backgroundColor: "#F5F0E8",
+            backgroundImage: "radial-gradient(circle, #E0D5C5 1.2px, transparent 1.2px)",
+            backgroundSize: "24px 24px",
+            backgroundAttachment: "local",
+          }}>
+            <div style={{ width: 3000, height: 3000, position: "relative" }}>
+              {stories.map((story) => (
+                <StoryBubble key={story.id} story={story} activeFilters={activeFilters} onTap={openStory} />
               ))}
             </div>
           </TransformComponent>
         </TransformWrapper>
       </div>
-
 
       {/* ── Story bottom sheet ───────────────────────────────────────────── */}
       <StoryBottomSheet

@@ -1,10 +1,19 @@
 export type TailDir = "bl" | "bc" | "br";
 export type Category = "Adventure" | "Learning" | "Connecting" | "Going wild" | "Going solo";
 
-export interface Story {
-  id: number;
+// Raw DB story — what comes from Supabase
+export interface DBStory {
+  id: string;
   title: string;
   category: Category;
+  moment: string;
+  worth_it: string;
+  advice: string | null;
+  created_at: string;
+}
+
+// Canvas story — DB fields + computed placement for WanderFeed bubbles
+export interface Story extends DBStory {
   x: number;
   y: number;
   rotation: number;

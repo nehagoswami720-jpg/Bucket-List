@@ -2,6 +2,8 @@
 
 import { useRef, useEffect, useState, useCallback, Fragment } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import type { StoryFormData } from "../lib/api";
+import type { Category } from "../lib/storyTypes";
 
 const MAX       = 280;
 const MAX_TITLE = 80;
@@ -327,9 +329,11 @@ function ProgressBar({ step }: { step: number }) {
 export default function StorySheet({
   open,
   onClose,
+  onSubmit,
 }: {
   open: boolean;
   onClose: () => void;
+  onSubmit?: (data: StoryFormData) => void;
 }) {
   const [step, setStep]           = useState(0);
   const [answers, setAnswers]     = useState<string[]>(Array(TOTAL).fill(""));
@@ -421,7 +425,13 @@ export default function StorySheet({
     setAnswers(saved);
 
     if (isLastStep) {
-      onClose();
+      onSubmit?.({
+        moment:   saved[0],
+        worth_it: saved[1],
+        advice:   saved[2].trim() || null,
+        category: (selectedCategories[0] ?? "Adventure") as Category,
+        title:    saved[4],
+      });
       return;
     }
 
