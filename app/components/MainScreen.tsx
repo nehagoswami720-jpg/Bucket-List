@@ -5,7 +5,9 @@ import { motion, AnimatePresence } from "framer-motion";
 import BottomNav from "./BottomNav";
 import WanderFeed from "./WanderFeed";
 import CollectGrid from "./CollectGrid";
+import CollectEmptyState from "./CollectEmptyState";
 import StorySheet from "./StorySheet";
+import StoryBottomSheet from "./StoryBottomSheet";
 import AuthSheet from "./AuthSheet";
 import { useAuth } from "../lib/authContext";
 import {
@@ -20,6 +22,23 @@ import type { StoryFormData } from "../lib/api";
 
 type Tab = "Wander" | "Collect";
 
+const PENDING_STORY_KEY = "wander_pending_save";
+
+function getPendingStory(): DBStory | null {
+  try {
+    const json = localStorage.getItem(PENDING_STORY_KEY);
+    return json ? JSON.parse(json) : null;
+  } catch { return null; }
+}
+
+function setPendingStory(story: DBStory) {
+  localStorage.setItem(PENDING_STORY_KEY, JSON.stringify(story));
+}
+
+function clearPendingStory() {
+  localStorage.removeItem(PENDING_STORY_KEY);
+}
+
 export default function MainScreen() {
   const { user }                                    = useAuth();
   const [activeTab, setActiveTab]                   = useState<Tab>("Wander");
@@ -29,8 +48,9 @@ export default function MainScreen() {
   const [savedStories, setSavedStories]             = useState<DBStory[]>([]);
   const [doneIds, setDoneIds]                       = useState<Set<string>>(new Set());
   const [storiesRefreshKey, setStoriesRefreshKey]   = useState(0);
+  const [postAuthStory, setPostAuthStory]           = useState<DBStory | null>(null);
 
-  // Stores an action to run after user signs in
+
   const pendingActionRef = useRef<(() => void) | null>(null);
 
   const savedStoryIds = useMemo(() => new Set(savedStories.map((s) => s.id)), [savedStories]);
@@ -42,21 +62,35 @@ export default function MainScreen() {
       setDoneIds(new Set());
       return;
     }
-
     fetchSavesWithStories(user.id).then((rows) => {
       setSavedStories(rows.map((r) => r.story));
       setDoneIds(new Set(rows.filter((r) => r.is_done).map((r) => r.story.id)));
     });
   }, [user]);
 
-  // After sign-in, execute any pending action (save / submit)
+  // After sign-in: close AuthSheet, recover any pending save from sessionStorage
   useEffect(() => {
-    if (user && pendingActionRef.current) {
+    if (!user) return;
+
+    setShowAuthSheet(false);
+
+    const story = getPendingStory();
+    if (story) {
+      clearPendingStory();
+      performSave(story).then(() => {
+        setPostAuthStory(story);
+        setStorySheetOpen(true);
+      });
+      return;
+    }
+
+
+    if (pendingActionRef.current) {
       const action = pendingActionRef.current;
       pendingActionRef.current = null;
       action();
     }
-  }, [user]);
+  }, [user]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // ── Save / unsave ───────────────────────────────────────────────────────────
   async function performSave(story: DBStory) {
@@ -67,13 +101,18 @@ export default function MainScreen() {
       setSavedStories((prev) => prev.filter((s) => s.id !== story.id));
       setDoneIds((prev) => { const next = new Set(prev); next.delete(story.id); return next; });
     } else {
-      await saveStory(user.id, story.id);
+      try {
+        await saveStory(user.id, story.id);
+      } catch (e) {
+        console.warn("saveStory failed:", e);
+      }
       setSavedStories((prev) => [...prev, story]);
     }
   }
 
   function handleSaveToggle(story: DBStory) {
     if (!user) {
+      setPendingStory(story);
       pendingActionRef.current = () => performSave(story);
       setShowAuthSheet(true);
       return;
@@ -99,7 +138,7 @@ export default function MainScreen() {
     try {
       await submitStory({ ...data, user_id: user.id });
       setShowStorySheet(false);
-      setStoriesRefreshKey((k) => k + 1); // triggers WanderFeed re-fetch
+      setStoriesRefreshKey((k) => k + 1);
     } catch (e) {
       console.error("submit failed:", e);
     }
@@ -114,20 +153,17 @@ export default function MainScreen() {
     performSubmit(data);
   }
 
+
   return (
     <motion.div
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       transition={{ duration: 0.5, ease: "easeOut" }}
       style={{
-        position: "fixed",
-        inset: 0,
+        position: "fixed", inset: 0,
         backgroundColor: "#EDEAE5",
-        width: "100%",
-        height: "100%",
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
+        width: "100%", height: "100%",
+        display: "flex", alignItems: "center", justifyContent: "center",
       }}
     >
       {/* Tab content */}
@@ -160,13 +196,18 @@ export default function MainScreen() {
             transition={{ duration: 0.25 }}
             style={{ width: "100%" }}
           >
-            <CollectGrid
-              savedStories={savedStories}
-              doneIds={doneIds}
-              onSaveToggle={handleSaveToggle}
-              onToggleDone={handleToggleDone}
-              onStoryOpen={setStorySheetOpen}
-            />
+            {savedStories.length === 0
+              ? <CollectEmptyState />
+              : (
+                <CollectGrid
+                  savedStories={savedStories}
+                  doneIds={doneIds}
+                  onSaveToggle={handleSaveToggle}
+                  onToggleDone={handleToggleDone}
+                  onStoryOpen={setStorySheetOpen}
+                />
+              )
+            }
           </motion.div>
         )}
       </AnimatePresence>
@@ -179,6 +220,14 @@ export default function MainScreen() {
         open={showStorySheet}
         onClose={() => setShowStorySheet(false)}
         onSubmit={handleSubmit}
+      />
+
+      {/* Post-auth story sheet — opens automatically after magic link redirect */}
+      <StoryBottomSheet
+        story={postAuthStory}
+        isSaved={postAuthStory ? true : false}
+        onSaveToggle={() => postAuthStory && handleSaveToggle(postAuthStory)}
+        onClose={() => { setPostAuthStory(null); setStorySheetOpen(false); }}
       />
 
       <AuthSheet open={showAuthSheet} onClose={() => setShowAuthSheet(false)} />

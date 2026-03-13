@@ -367,7 +367,21 @@ export default function WanderFeed({
   async function loadStories() {
     setLoading(true);
     try {
-      const dbStories = await fetchStories();
+      let dbStories = await fetchStories();
+
+      // TEMP: mock story for testing the save/auth flow — remove before launch
+      if (dbStories.length === 0) {
+        dbStories = [{
+          id: "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+          title: "the night I ate alone in Tokyo",
+          category: "Going solo",
+          moment: "I sat at a tiny ramen counter at 11pm, no phone, no book. Just me and the cook. He nodded when I finished. That was enough.",
+          worth_it: "I stopped being afraid of my own company after that.",
+          advice: "Order the rich broth. Sit at the counter, not a table. Leave your phone in your pocket.",
+          created_at: new Date().toISOString(),
+        }];
+      }
+
       setStories(buildCanvasStories(dbStories));
     } catch (e) {
       console.error("failed to load stories:", e);
@@ -401,8 +415,10 @@ export default function WanderFeed({
     transformRef.current?.setTransform(-(canvasX - vw / 2), -(canvasY - vh / 2), 1, 0);
   }, [stories.length > 0]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  // Empty / loading state
-  if (!loading && stories.length === 0) {
+  // While fetching, render nothing (prevents canvas flash before empty state)
+  if (loading) return null;
+
+  if (stories.length === 0) {
     return <WanderEmptyState onStart={onStart} />;
   }
 
