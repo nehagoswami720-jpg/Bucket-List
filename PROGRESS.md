@@ -123,44 +123,59 @@ Auth is **never forced on browsing**. It triggers only when the user tries to **
 
 ---
 
+## Auth Flow (as built)
+
+### New user
+1. Opens app → Splash → WelcomeSheet → Wander feed
+2. Taps story → taps "Save to my bucket list" → AuthSheet slides up
+3. Enters email → magic link sent → clicks link in email → redirected back
+4. Story sheet opens automatically with saved state (pending save recovered from `localStorage`)
+5. Collect tab shows paper bucket list
+6. Always signed in from this point — no logout
+
+### Returning user (signed in)
+- Opens app → straight to Wander feed (splash + welcome skipped)
+
+### Why no logout
+Users on mobile apps don't sign out. Removing logout eliminates an entire class of edge cases. See `DECISIONS.md` for full reasoning.
+
+### Key localStorage keys
+- `wander_onboarded` — set on first `SIGNED_IN` event, used to skip onboarding for returning users
+- `wander_pending_save` — stores story JSON before magic link redirect so it survives cross-tab navigation
+
+---
+
 ## Backpocket — Deferred Issues
 
-These were identified during backend wiring and will be fixed in a future pass.
+1. **WanderFeed canvas position `useEffect` bug**
+   `[stories.length > 0]` evaluates to a boolean, not a proper reactive dependency. Fix: separate fetch effect and pan effect properly.
 
-1. **AuthSheet doesn't auto-close after sign-in**
-   `showAuthSheet` stays `true` in MainScreen even after `onAuthStateChange` fires. Need to watch `user` in a `useEffect` and call `setShowAuthSheet(false)`.
+2. **Blank canvas while stories load**
+   WanderFeed returns `null` while loading (prevents canvas flash). A subtle loading indicator would improve the experience.
 
-2. **Collect tab for logged-out users**
-   Currently shows "nothing saved yet" — misleading. A logged-out user should see a "sign in to save stories" prompt instead.
+3. **StorySheet state reset after unauthenticated submit**
+   When auth is required mid-submit, StorySheet sits open under AuthSheet. After sign-in, `performSubmit` fires and `setShowStorySheet(false)` closes it. Needs end-to-end testing to confirm state resets correctly.
 
-3. **WanderFeed canvas position `useEffect` bug**
-   `[stories.length > 0]` evaluates to a boolean, not a proper reactive dependency. The random pan-to-cluster fires before stories load. Fix: separate fetch effect and pan effect properly.
-
-4. **Blank canvas while stories load**
-   No loading state in WanderFeed. Canvas is empty during Supabase fetch. Need a subtle loading indicator.
-
-5. **StorySheet state reset after unauthenticated submit**
-   When auth is required mid-submit, StorySheet sits open under AuthSheet. After sign-in, `performSubmit` fires and `setShowStorySheet(false)` closes it. Internal step/answer state should reset via the existing `useEffect` on `open`. Needs end-to-end testing to confirm it works correctly.
+4. **Post-auth story sheet race condition**
+   `fetchSavesWithStories` and `performSave` both fire when user becomes non-null. May cause a brief state conflict. Fine in production (story is in DB). Mock stories not in DB will not persist to Collect tab after reload.
 
 ---
 
 ## Git History
 
 ```
-0a58b3d  Wire Supabase backend: auth, story fetch/submit, save/done flows
-9250d84  Complete save flow: story bottom sheet micro-interactions and Collect tab reader
-815a0c7  Add voice input to story submission with word-by-word transcript animation
-912a890  Streamline story submission from 6 to 5 questions
-06646be  Enable zoom on Wander canvas and fix double dot-grid background
-4481454  Add Collect tab: scrollable paper list with animations
-878f7d3  Redesign bottom nav, polish story sheet, multi-select filter chips
+4eed453  Complete 6-question story submission flow with category selection
+072c0d1  Add questions 2-4, back navigation, ripple CTA, and direction-aware transitions
+10c8fc9  Build full app flow: splash → welcome sheet → main screen → story submission
+4ab2004  Add splash screen and welcome bottom sheet
+00efc4d  Initial commit from Create Next App
 ```
 
 ---
 
 ## Next Steps (when resuming)
 
-- Work through each user flow screen by screen with design input
-- Tackle backpocket issues above
-- Seed DB with real stories for testing
-- Deploy to Vercel (magic link auth requires HTTPS — Vercel deploy will make mobile testing work)
+- Test full sign-up flow end-to-end on mobile after Vercel deploy
+- Seed DB with real stories
+- Deploy to Vercel (magic link auth requires HTTPS for mobile testing)
+- See `DECISIONS.md` for full design + system reasoning
