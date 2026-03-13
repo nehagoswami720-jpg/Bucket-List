@@ -153,10 +153,12 @@ function StoryBubble({
   story,
   activeFilters,
   onTap,
+  isOwn = false,
 }: {
   story: Story;
   activeFilters: string[];
   onTap: (s: Story) => void;
+  isOwn?: boolean;
 }) {
   const th = 12; // tail height
   const svgH = story.h + th;
@@ -244,8 +246,8 @@ function StoryBubble({
               </defs>
               <path
                 d={path}
-                fill="#FFFFFF"
-                stroke="#1C1C1C"
+                fill={isOwn ? "#FFF8E8" : "#FFFFFF"}
+                stroke={isOwn ? "#C49A28" : "#1C1C1C"}
                 strokeWidth="2"
                 strokeLinejoin="round"
                 filter={`url(#w${story.id})`}
@@ -350,12 +352,16 @@ export default function WanderFeed({
   savedStoryIds,
   onSaveToggle,
   refreshKey,
+  submittedStory,
+  myStoryIds,
 }: {
   onStart?: () => void;
   onStoryOpen?: (open: boolean) => void;
   savedStoryIds?: Set<string>;
   onSaveToggle?: (story: DBStory) => void;
   refreshKey?: number;
+  submittedStory?: DBStory | null;
+  myStoryIds?: Set<string>;
 }) {
   const [stories, setStories]             = useState<Story[]>([]);
   const [loading, setLoading]             = useState(true);
@@ -367,21 +373,7 @@ export default function WanderFeed({
   async function loadStories() {
     setLoading(true);
     try {
-      let dbStories = await fetchStories();
-
-      // TEMP: mock story for testing the save/auth flow — remove before launch
-      if (dbStories.length === 0) {
-        dbStories = [{
-          id: "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
-          title: "the night I ate alone in Tokyo",
-          category: "Going solo",
-          moment: "I sat at a tiny ramen counter at 11pm, no phone, no book. Just me and the cook. He nodded when I finished. That was enough.",
-          worth_it: "I stopped being afraid of my own company after that.",
-          advice: "Order the rich broth. Sit at the counter, not a table. Leave your phone in your pocket.",
-          created_at: new Date().toISOString(),
-        }];
-      }
-
+      const dbStories = await fetchStories();
       setStories(buildCanvasStories(dbStories));
     } catch (e) {
       console.error("failed to load stories:", e);
@@ -391,6 +383,16 @@ export default function WanderFeed({
   }
 
   useEffect(() => { loadStories(); }, [refreshKey]);
+
+  // Add just-submitted story to canvas immediately (it's pending in DB, won't appear via fetch)
+  useEffect(() => {
+    if (!submittedStory) return;
+    setStories((prev) => {
+      if (prev.find((s) => s.id === submittedStory.id)) return prev;
+      const placed = prev.map((s) => ({ x: s.x, y: s.y, w: s.w, h: s.h }));
+      return [...prev, dbToCanvasStory(submittedStory, placed)];
+    });
+  }, [submittedStory]);
 
   function toggleFilter(f: string) {
     if (f === "All") { setActiveFilters(["All"]); return; }
@@ -466,7 +468,7 @@ export default function WanderFeed({
           }}>
             <div style={{ width: 3000, height: 3000, position: "relative" }}>
               {stories.map((story) => (
-                <StoryBubble key={story.id} story={story} activeFilters={activeFilters} onTap={openStory} />
+                <StoryBubble key={story.id} story={story} activeFilters={activeFilters} onTap={openStory} isOwn={myStoryIds?.has(story.id) ?? false} />
               ))}
             </div>
           </TransformComponent>
@@ -479,6 +481,7 @@ export default function WanderFeed({
         isSaved={selectedStory ? (savedStoryIds?.has(selectedStory.id) ?? false) : false}
         onSaveToggle={() => selectedStory && onSaveToggle?.(selectedStory)}
         onClose={closeStory}
+        isOwnStory={selectedStory ? (myStoryIds?.has(selectedStory.id) ?? false) : false}
       />
     </div>
   );

@@ -333,7 +333,7 @@ export default function StorySheet({
 }: {
   open: boolean;
   onClose: () => void;
-  onSubmit?: (data: StoryFormData) => void;
+  onSubmit?: (data: StoryFormData) => Promise<void>;
 }) {
   const [step, setStep]           = useState(0);
   const [answers, setAnswers]     = useState<string[]>(Array(TOTAL).fill(""));
@@ -343,6 +343,8 @@ export default function StorySheet({
   const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
   const [ripples, setRipples]     = useState<{ id: number; x: number; y: number }[]>([]);
   const [sheetDraggable, setSheetDraggable] = useState(true);
+  const [submitting, setSubmitting]         = useState(false);
+  const [submitted, setSubmitted]           = useState(false);
   const [isRecording, setIsRecording]                 = useState(false);
   const [micPermissionDenied, setMicPermissionDenied] = useState(false);
   const [speechSupported, setSpeechSupported]         = useState(false);
@@ -403,10 +405,19 @@ export default function StorySheet({
       setAnswers(Array(TOTAL).fill(""));
       setSelectedCategories([]);
       setKbH(0);
+      setSubmitting(false);
+      setSubmitted(false);
       return;
     }
     return;
   }, [open]);
+
+  // Auto-close after success screen
+  useEffect(() => {
+    if (!submitted) return;
+    const t = setTimeout(onClose, 4000);
+    return () => clearTimeout(t);
+  }, [submitted]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Stop recording when step changes
   useEffect(() => {
@@ -419,19 +430,27 @@ export default function StorySheet({
     }
   }, [step]);
 
-  function handleNext() {
+  async function handleNext() {
     const saved = [...answers];
     saved[step] = value;
     setAnswers(saved);
 
     if (isLastStep) {
-      onSubmit?.({
-        moment:   saved[0],
-        worth_it: saved[1],
-        advice:   saved[2].trim() || null,
-        category: (selectedCategories[0] ?? "Adventure") as Category,
-        title:    saved[4],
-      });
+      setSubmitting(true);
+      try {
+        await onSubmit?.({
+          moment:   saved[0],
+          worth_it: saved[1],
+          advice:   saved[2].trim() || null,
+          category: (selectedCategories[0] ?? "Adventure") as Category,
+          title:    saved[4],
+        });
+        setSubmitted(true);
+      } catch {
+        // stay on step so user can retry
+      } finally {
+        setSubmitting(false);
+      }
       return;
     }
 
@@ -643,6 +662,54 @@ export default function StorySheet({
           <ProgressBar step={step} />
         </div>
 
+        {/* Success screen */}
+        {submitted && (
+          <div style={{
+            flex: 1,
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "center",
+            justifyContent: "center",
+            padding: "0 40px",
+            textAlign: "center",
+            gap: 16,
+          }}>
+            <motion.p
+              initial={{ opacity: 0, y: 24, filter: "blur(6px)" }}
+              animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
+              transition={{ duration: 0.7, ease: [0.22, 1, 0.36, 1], delay: 0.1 }}
+              style={{
+                fontFamily: "Helvetica, Arial, sans-serif",
+                fontSize: 28, fontWeight: 700, color: "#202020",
+                margin: 0, letterSpacing: "-0.03em", lineHeight: 1.2,
+              }}
+            >
+              your story is out there.
+            </motion.p>
+            <motion.p
+              initial={{ opacity: 0, y: 16, filter: "blur(4px)" }}
+              animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
+              transition={{ duration: 0.7, ease: [0.22, 1, 0.36, 1], delay: 0.35 }}
+              style={{
+                fontFamily: "'Courier New', Courier, monospace",
+                fontSize: 16, fontWeight: 600, color: "#6D6D6D",
+                margin: 0, letterSpacing: "-0.02em", lineHeight: 1.5,
+              }}
+            >
+              it'll find the right person.
+            </motion.p>
+            <motion.div
+              initial={{ scaleX: 0 }}
+              animate={{ scaleX: 1 }}
+              transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1], delay: 0.65 }}
+              style={{
+                width: 32, height: 2, borderRadius: 99,
+                backgroundColor: "#282828", transformOrigin: "center",
+              }}
+            />
+          </div>
+        )}
+
         {/* Scrollable content */}
         <div
           ref={scrollRef}
@@ -654,7 +721,7 @@ export default function StorySheet({
           }}
           style={{
             flex: 1,
-            display: "flex",
+            display: submitted ? "none" : "flex",
             flexDirection: "column",
             padding: isCategoryStep ? "0 24px 160px" : "0 24px 180px",
             boxSizing: "border-box",
@@ -831,6 +898,7 @@ export default function StorySheet({
           position: "fixed",
           left: 0, right: 0,
           bottom: keyboardHeight,
+          display: submitted ? "none" : undefined,
           backgroundColor: "#EDEAE5",
           zIndex: 62,
           transition: "bottom 0.25s ease",
@@ -842,6 +910,7 @@ export default function StorySheet({
             justifyContent: "center",
           }}>
           <motion.button
+            disabled={submitting || (isCategoryStep && selectedCategories.length === 0) || (!isCategoryStep && isEmpty)}
             onClick={(e) => {
               const rect = e.currentTarget.getBoundingClientRect();
               const id = ++rippleId.current;
@@ -890,7 +959,19 @@ export default function StorySheet({
                 }}
               />
             ))}
-            {isLastStep ? "Share my story" : isCategoryStep ? "Almost done" : "Keep going"}
+            {submitting ? (
+              <span style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 3 }}>
+                <span>sharing</span>
+                {[0, 1, 2].map((i) => (
+                  <motion.span
+                    key={i}
+                    animate={{ opacity: [0, 1, 0] }}
+                    transition={{ duration: 1.1, repeat: Infinity, delay: i * 0.18, ease: "easeInOut" }}
+                    style={{ display: "inline-block" }}
+                  >.</motion.span>
+                ))}
+              </span>
+            ) : isLastStep ? "Share my story" : isCategoryStep ? "Almost done" : "Keep going"}
           </motion.button>
           </div>
         </div>

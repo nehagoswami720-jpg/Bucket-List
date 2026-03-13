@@ -49,6 +49,13 @@ export default function MainScreen() {
   const [doneIds, setDoneIds]                       = useState<Set<string>>(new Set());
   const [storiesRefreshKey, setStoriesRefreshKey]   = useState(0);
   const [postAuthStory, setPostAuthStory]           = useState<DBStory | null>(null);
+  const [submittedStory, setSubmittedStory]         = useState<DBStory | null>(null);
+  const [myStoryIds, setMyStoryIds]                 = useState<Set<string>>(() => {
+    try {
+      const ids = JSON.parse(localStorage.getItem("wander_my_stories") || "[]");
+      return new Set(ids as string[]);
+    } catch { return new Set(); }
+  });
 
 
   const pendingActionRef = useRef<(() => void) | null>(null);
@@ -133,14 +140,16 @@ export default function MainScreen() {
   }
 
   // ── Story submit — no auth required ────────────────────────────────────────
-  async function handleSubmit(data: StoryFormData) {
+  async function handleSubmit(data: StoryFormData): Promise<void> {
+    const story = await submitStory(data);
+    // Track as own story
+    setMyStoryIds((prev) => new Set([...prev, story.id]));
     try {
-      await submitStory(data);
-      setShowStorySheet(false);
-      setStoriesRefreshKey((k) => k + 1);
-    } catch (e) {
-      console.error("submit failed:", e);
-    }
+      const ids = JSON.parse(localStorage.getItem("wander_my_stories") || "[]") as string[];
+      localStorage.setItem("wander_my_stories", JSON.stringify([...ids, story.id]));
+    } catch {}
+    // Add to canvas immediately (pending in DB, won't appear via feed fetch)
+    setSubmittedStory(story);
   }
 
 
@@ -173,6 +182,8 @@ export default function MainScreen() {
               savedStoryIds={savedStoryIds}
               onSaveToggle={handleSaveToggle}
               refreshKey={storiesRefreshKey}
+              submittedStory={submittedStory}
+              myStoryIds={myStoryIds}
             />
           </motion.div>
         )}
@@ -208,7 +219,7 @@ export default function MainScreen() {
 
       <StorySheet
         open={showStorySheet}
-        onClose={() => setShowStorySheet(false)}
+        onClose={() => { setShowStorySheet(false); }}
         onSubmit={handleSubmit}
       />
 

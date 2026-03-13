@@ -9,11 +9,13 @@ export default function StoryBottomSheet({
   isSaved,
   onSaveToggle,
   onClose,
+  isOwnStory = false,
 }: {
   story: DBStory | null;
   isSaved: boolean;
   onSaveToggle: () => void;
   onClose: () => void;
+  isOwnStory?: boolean;
 }) {
   const [pressing, setPressing] = useState(false);
   const [particles, setParticles] = useState<{ id: number; angle: number; distance: number; size: number }[]>([]);
@@ -127,28 +129,55 @@ export default function StoryBottomSheet({
                 transition={{ delay: 0.18, duration: 0.45, ease: [0.22, 1, 0.36, 1] }}
                 style={{ padding: "12px 24px 48px", display: "flex", flexDirection: "column" }}
               >
-                {/* Category pill */}
-                <div
-                  style={{
-                    display: "inline-flex",
-                    alignSelf: "flex-start",
-                    backgroundColor: CATEGORY_COLOR[story.category],
-                    borderRadius: 6,
-                    padding: "4px 10px",
-                    marginBottom: 14,
-                  }}
-                >
-                  <span
+                {/* Category pill + optional "Submitted by you" tag */}
+                <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 14, flexWrap: "wrap" }}>
+                  <div
                     style={{
-                      fontFamily: "Helvetica, Arial, sans-serif",
-                      fontSize: "12px",
-                      fontWeight: 600,
-                      color: "#ffffff",
-                      letterSpacing: "0.01em",
+                      display: "inline-flex",
+                      backgroundColor: CATEGORY_COLOR[story.category],
+                      borderRadius: 6,
+                      padding: "4px 10px",
                     }}
                   >
-                    {story.category}
-                  </span>
+                    <span
+                      style={{
+                        fontFamily: "Helvetica, Arial, sans-serif",
+                        fontSize: "12px",
+                        fontWeight: 600,
+                        color: "#ffffff",
+                        letterSpacing: "0.01em",
+                      }}
+                    >
+                      {story.category}
+                    </span>
+                  </div>
+
+                  {isOwnStory && (
+                    <motion.div
+                      initial={{ opacity: 0, scale: 0.88 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      transition={{ duration: 0.35, ease: [0.22, 1, 0.36, 1] }}
+                      style={{
+                        display: "inline-flex",
+                        border: `1.5px solid ${CATEGORY_COLOR[story.category]}`,
+                        borderRadius: 6,
+                        padding: "4px 10px",
+                        backgroundColor: "transparent",
+                      }}
+                    >
+                      <span
+                        style={{
+                          fontFamily: "Helvetica, Arial, sans-serif",
+                          fontSize: "12px",
+                          fontWeight: 600,
+                          color: CATEGORY_COLOR[story.category],
+                          letterSpacing: "0.01em",
+                        }}
+                      >
+                        Submitted by you
+                      </span>
+                    </motion.div>
+                  )}
                 </div>
 
                 {/* Title */}
@@ -183,6 +212,7 @@ export default function StoryBottomSheet({
                 </div>
 
                 {/* Save button */}
+                {!isOwnStory && (
                 <div style={{ marginTop: 32, display: "flex", justifyContent: "center" }}>
                   <motion.button
                     onClick={handleSaveToggle}
@@ -294,6 +324,7 @@ export default function StoryBottomSheet({
                     </div>
                   </motion.button>
                 </div>
+                )}
 
               </motion.div>
             </div>
