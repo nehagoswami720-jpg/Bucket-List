@@ -132,25 +132,15 @@ export default function MainScreen() {
     await toggleDone(user.id, storyId, nowDone);
   }
 
-  // ── Story submit ────────────────────────────────────────────────────────────
-  async function performSubmit(data: StoryFormData) {
-    if (!user) return;
+  // ── Story submit — no auth required ────────────────────────────────────────
+  async function handleSubmit(data: StoryFormData) {
     try {
-      await submitStory({ ...data, user_id: user.id });
+      await submitStory(data);
       setShowStorySheet(false);
       setStoriesRefreshKey((k) => k + 1);
     } catch (e) {
       console.error("submit failed:", e);
     }
-  }
-
-  function handleSubmit(data: StoryFormData) {
-    if (!user) {
-      pendingActionRef.current = () => performSubmit(data);
-      setShowAuthSheet(true);
-      return;
-    }
-    performSubmit(data);
   }
 
 

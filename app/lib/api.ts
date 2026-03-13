@@ -23,7 +23,7 @@ export async function fetchStories(): Promise<DBStory[]> {
 }
 
 export async function submitStory(
-  input: StoryFormData & { user_id: string }
+  input: StoryFormData
 ): Promise<DBStory> {
   const { data, error } = await supabase
     .from("stories")
