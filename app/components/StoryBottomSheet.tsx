@@ -202,12 +202,22 @@ export default function StoryBottomSheet({
                   color: "#1E1E1E",
                   lineHeight: 1.6,
                 }}>
-                  <p style={{ margin: "0 0 20px" }}>{story.moment}</p>
-                  <p style={{ margin: "0 0 20px" }}>{story.worth_it}</p>
-                  {story.advice && (
-                    <p style={{ margin: 0, color: "#555555", fontStyle: "italic" }}>
-                      {story.advice}
-                    </p>
+                  {story.body ? (
+                    story.body.split("\n\n").map((para, i) => (
+                      <p key={i} style={{ margin: i < story.body!.split("\n\n").length - 1 ? "0 0 20px" : "0" }}>
+                        {para}
+                      </p>
+                    ))
+                  ) : (
+                    <>
+                      <p style={{ margin: "0 0 20px" }}>{story.moment}</p>
+                      <p style={{ margin: "0 0 20px" }}>{story.worth_it}</p>
+                      {story.advice && (
+                        <p style={{ margin: 0, color: "#555555", fontStyle: "italic" }}>
+                          {story.advice}
+                        </p>
+                      )}
+                    </>
                   )}
                 </div>
 

@@ -62,6 +62,11 @@ export default function MainScreen() {
 
   const savedStoryIds = useMemo(() => new Set(savedStories.map((s) => s.id)), [savedStories]);
 
+  // If saved list drops to zero, ensure the bottom sheet / nav state is reset
+  useEffect(() => {
+    if (savedStories.length === 0) setStorySheetOpen(false);
+  }, [savedStories.length]);
+
   // Load saves from Supabase whenever user logs in
   useEffect(() => {
     if (!user) {

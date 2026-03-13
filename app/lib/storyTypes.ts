@@ -9,6 +9,7 @@ export interface DBStory {
   moment: string;
   worth_it: string;
   advice: string | null;
+  body: string | null;
   created_at: string;
 }
 
