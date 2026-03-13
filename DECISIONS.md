@@ -168,6 +168,92 @@ The story reader sheet is used by both WanderFeed and CollectGrid. It was extrac
 
 ---
 
+## Story Submission — StorySheet
+
+### The 5 questions
+
+The submission flow is a guided 5-step form. Each question was chosen to extract a specific type of content that makes a story worth reading — not a review, not a rating, but a lived moment.
+
+| Step | Question | Purpose |
+|------|----------|---------|
+| 0 | *What's something you tried that you wish someone had told you about sooner?* | Sets the frame — this is a story worth passing on, not just a memory |
+| 1 | *Take us there. What do you remember most about that moment?* | The sensory/emotional anchor. Forces the person to recall a specific scene, not a summary |
+| 2 | *What made this worth it?* | The payoff. Why should anyone else care? |
+| 3 | *If a friend texted you right now asking how to try this — what would you tell them?* | Converts the story into actionable advice. Makes it useful, not just inspiring |
+| 4 | *Give your story a title. Make it one they can't ignore.* | The hook. Forces the person to distil the whole thing into one line |
+
+The order matters. You can't write a great title until you've re-lived the moment. You can't give advice until you've articulated why it was worth it. The questions build on each other.
+
+Step 3 (advice) is the only optional step — not every experience has a clean how-to. Skipping it is allowed; the story is still complete without it.
+
+---
+
+### Voice input
+Voice input is available on all text steps using the **Web Speech API** (`window.SpeechRecognition`). Words appear one by one as the transcript streams in, giving a satisfying real-time feeling.
+
+**Why:** Typing a personal story on a phone keyboard is friction. Speaking it out loud is natural — people tell stories verbally before they ever write them down. Voice removes the blank-page problem.
+
+**Constraint:** Web Speech API only works over **HTTPS**. On localhost it won't work. On the Vercel deploy it will. This is a known limitation and was accepted — it's a progressive enhancement, not a dependency.
+
+---
+
+### Direction-aware transitions
+When moving forward through the steps, the question and input slide+blur out to the left, and the next one enters from the right. Going back reverses this.
+
+**Why:** Mobile users have a strong spatial mental model of "back = left, forward = right". Direction-aware transitions reinforce this — the form feels like pages in a book, not a single screen swapping content. It also signals progress clearly without needing an explicit indicator for every step.
+
+The question and input field animate as a **unit** — they move together, not independently. This prevents the jarring effect of text changing while an input field stays in place.
+
+---
+
+### Keyboard-aware CTA
+The "Keep going" / "Share my story" button is fixed to the bottom of the screen using `visualViewport` — it sits just above the software keyboard when it's open.
+
+**Why:** On mobile, the keyboard pushes content up unpredictably. A fixed-position button using `window.scrollY` alone would get buried behind the keyboard. `visualViewport.height` gives the actual visible screen height after the keyboard appears, so the button always stays reachable.
+
+---
+
+### Scroll fix (sheet drag conflict)
+The StorySheet is a bottom sheet that can be dragged to dismiss. But on steps with a scrollable textarea, dragging to scroll conflicts with dragging to dismiss.
+
+**Fix:** A `sheetDraggable` state tracks whether `scrollTop > 0` in the textarea. When the user has scrolled down inside the input, sheet drag is disabled. When they scroll back to the top, sheet drag re-enables. This means: scroll up fully, then drag to dismiss — which matches the native iOS sheet pattern.
+
+---
+
+## Category Selection
+
+### The 5 categories
+Adventure · Learning · Connecting · Going wild · Going solo
+
+These were chosen to cover the full spectrum of experiences people might share without being so granular they become confusing. Each category has a distinct emotional register:
+
+- **Adventure** — physical, outdoors, doing something that scared you
+- **Learning** — skill, knowledge, a moment of understanding
+- **Connecting** — people, relationships, unexpected conversations
+- **Going wild** — spontaneous, chaotic, probably a bad idea that turned great
+- **Going solo** — doing something alone that's usually done with others
+
+**Why 5 and not more:** More categories means more decisions for the submitter and more filter chips for the browser. 5 fits in one row of chips without scrolling on most phones. It also forces stories into meaningful buckets — if you can't pick one, the categories are doing their job.
+
+---
+
+### Multi-select logic
+On the category step, users can select multiple categories. The logic:
+- Selecting a category toggles it on/off
+- At least one must be selected to proceed (the CTA stays disabled with no selection)
+- When the story is submitted, the first selected category is used as the primary `category` field in the DB
+
+**Why multi-select:** Some experiences genuinely span categories — a solo hiking trip is both Adventure and Going solo. Forcing a single pick felt reductive. The trade-off is that the DB stores only one category per story (the first selected), which is a simplification. Good enough for MVP.
+
+---
+
+### Category card ripple interaction
+Each category card has a **per-card ripple** that expands from the tap point on selection, plus an animated border colour transition (`#CECECE` → `#464646`).
+
+**Why:** On a step with no text input, the only interaction is tapping cards. The ripple gives immediate tactile feedback that something happened. The border colour change is the persistent state indicator — the ripple is the moment, the border is the memory.
+
+---
+
 ## Pivots
 
 | What changed | Why |
