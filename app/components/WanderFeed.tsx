@@ -424,10 +424,29 @@ export default function WanderFeed({
     const vw = window.innerWidth;
     const vh = window.innerHeight - 70 - 82;
     transformRef.current?.setTransform(-(canvasX - vw / 2), -(canvasY - vh / 2), 1, 0);
-  }, [stories.length > 0]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [stories.length]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  // While fetching, render nothing (prevents canvas flash before empty state)
-  if (loading) return null;
+  // While fetching, show a subtle loading state
+  if (loading) return (
+    <div style={{
+      position: "fixed", inset: 0,
+      backgroundColor: "#F5F0E8",
+      backgroundImage: "radial-gradient(circle, #E0D5C5 1.2px, transparent 1.2px)",
+      backgroundSize: "24px 24px",
+      display: "flex", alignItems: "center", justifyContent: "center",
+    }}>
+      <div style={{ display: "flex", gap: 8 }}>
+        {[0, 1, 2].map((i) => (
+          <motion.div
+            key={i}
+            animate={{ opacity: [0.2, 1, 0.2], y: [0, -6, 0] }}
+            transition={{ duration: 1.1, repeat: Infinity, delay: i * 0.18, ease: "easeInOut" }}
+            style={{ width: 7, height: 7, borderRadius: "50%", backgroundColor: "#282828" }}
+          />
+        ))}
+      </div>
+    </div>
+  );
 
   if (stories.length === 0) {
     return <WanderEmptyState onStart={onStart} />;
