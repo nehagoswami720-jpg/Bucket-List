@@ -10,6 +10,7 @@ import WanderEmptyState from "./WanderEmptyState";
 import type { Story, DBStory, Category, TailDir } from "../lib/storyTypes";
 import { CATEGORY_COLOR } from "../lib/storyTypes";
 import { fetchStories } from "../lib/api";
+import { supabase } from "../lib/supabase";
 
 export type { Story };
 
@@ -383,6 +384,27 @@ export default function WanderFeed({
   }
 
   useEffect(() => { loadStories(); }, [refreshKey]);
+
+  // Realtime — add new published stories from other users as they come in
+  useEffect(() => {
+    const channel = supabase
+      .channel("stories-inserts")
+      .on(
+        "postgres_changes",
+        { event: "INSERT", schema: "public", table: "stories", filter: "status=eq.published" },
+        (payload) => {
+          const incoming = payload.new as DBStory;
+          setStories((prev) => {
+            if (prev.find((s) => s.id === incoming.id)) return prev;
+            const placed = prev.map((s) => ({ x: s.x, y: s.y, w: s.w, h: s.h }));
+            return [...prev, dbToCanvasStory(incoming, placed)];
+          });
+        }
+      )
+      .subscribe();
+
+    return () => { supabase.removeChannel(channel); };
+  }, []);
 
   // Add just-submitted story to canvas and pan to it so user lands on their bubble
   useEffect(() => {
