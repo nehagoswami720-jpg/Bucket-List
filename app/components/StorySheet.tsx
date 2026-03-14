@@ -453,7 +453,7 @@ export default function StorySheet({
           moment:   saved[0],
           worth_it: saved[1],
           advice:   saved[2].trim() || null,
-          category: (selectedCategories[0] ?? "Adventure") as Category,
+          category: (selectedCategories.length > 0 ? selectedCategories : ["Adventure"]) as Category[],
           title:    saved[4],
         });
         setSubmitted(true);

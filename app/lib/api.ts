@@ -6,7 +6,7 @@ export interface StoryFormData {
   moment:   string;
   worth_it: string;
   advice:   string | null;
-  category: Category;
+  category: Category[];
   title:    string;
 }
 

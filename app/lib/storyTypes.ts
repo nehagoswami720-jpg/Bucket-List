@@ -5,7 +5,7 @@ export type Category = "Adventure" | "Learning" | "Connecting" | "Going wild" | 
 export interface DBStory {
   id: string;
   title: string;
-  category: Category;
+  category: Category[];
   moment: string;
   worth_it: string;
   advice: string | null;

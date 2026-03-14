@@ -163,7 +163,7 @@ function StoryBubble({
   const th = 12; // tail height
   const svgH = story.h + th;
   const path = getBubblePath(story.w, story.h, story.tailDir);
-  const visible = activeFilters.includes("All") || activeFilters.includes(story.category);
+  const visible = activeFilters.includes("All") || story.category.some((c) => activeFilters.includes(c));
 
   return (
     /* rotation wrapper — plain div so Framer Motion transforms don't conflict */
@@ -275,7 +275,7 @@ function StoryBubble({
                   fontFamily: "'Courier New', Courier, monospace",
                   fontSize: "14px",
                   fontWeight: 700,
-                  color: CATEGORY_COLOR[story.category],
+                  color: CATEGORY_COLOR[story.category[0]],
                   textAlign: "center",
                   margin: 0,
                   lineHeight: 1.45,
@@ -384,13 +384,22 @@ export default function WanderFeed({
 
   useEffect(() => { loadStories(); }, [refreshKey]);
 
-  // Add just-submitted story to canvas immediately (it's pending in DB, won't appear via fetch)
+  // Add just-submitted story to canvas and pan to it so user lands on their bubble
   useEffect(() => {
     if (!submittedStory) return;
     setStories((prev) => {
       if (prev.find((s) => s.id === submittedStory.id)) return prev;
       const placed = prev.map((s) => ({ x: s.x, y: s.y, w: s.w, h: s.h }));
-      return [...prev, dbToCanvasStory(submittedStory, placed)];
+      const newStory = dbToCanvasStory(submittedStory, placed);
+      // Pan to the new bubble after a short delay so it's rendered before we move
+      setTimeout(() => {
+        const vw = window.innerWidth;
+        const vh = window.innerHeight - 70 - 82;
+        const cx = newStory.x + newStory.w / 2;
+        const cy = newStory.y + newStory.h / 2;
+        transformRef.current?.setTransform(-(cx - vw / 2), -(cy - vh / 2), 1, 600, "easeOut");
+      }, 150);
+      return [...prev, newStory];
     });
   }, [submittedStory]);
 

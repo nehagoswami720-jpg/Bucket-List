@@ -129,28 +129,31 @@ export default function StoryBottomSheet({
                 transition={{ delay: 0.18, duration: 0.45, ease: [0.22, 1, 0.36, 1] }}
                 style={{ padding: "12px 24px 48px", display: "flex", flexDirection: "column" }}
               >
-                {/* Category pill + optional "Submitted by you" tag */}
+                {/* Category pills + optional "Submitted by you" tag */}
                 <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 14, flexWrap: "wrap" }}>
-                  <div
-                    style={{
-                      display: "inline-flex",
-                      backgroundColor: CATEGORY_COLOR[story.category],
-                      borderRadius: 6,
-                      padding: "4px 10px",
-                    }}
-                  >
-                    <span
+                  {story.category.map((cat) => (
+                    <div
+                      key={cat}
                       style={{
-                        fontFamily: "Helvetica, Arial, sans-serif",
-                        fontSize: "12px",
-                        fontWeight: 600,
-                        color: "#ffffff",
-                        letterSpacing: "0.01em",
+                        display: "inline-flex",
+                        backgroundColor: CATEGORY_COLOR[cat],
+                        borderRadius: 6,
+                        padding: "4px 10px",
                       }}
                     >
-                      {story.category}
-                    </span>
-                  </div>
+                      <span
+                        style={{
+                          fontFamily: "Helvetica, Arial, sans-serif",
+                          fontSize: "12px",
+                          fontWeight: 600,
+                          color: "#ffffff",
+                          letterSpacing: "0.01em",
+                        }}
+                      >
+                        {cat}
+                      </span>
+                    </div>
+                  ))}
 
                   {isOwnStory && (
                     <motion.div
@@ -159,7 +162,7 @@ export default function StoryBottomSheet({
                       transition={{ duration: 0.35, ease: [0.22, 1, 0.36, 1] }}
                       style={{
                         display: "inline-flex",
-                        border: `1.5px solid ${CATEGORY_COLOR[story.category]}`,
+                        border: `1.5px solid ${CATEGORY_COLOR[story.category[0]]}`,
                         borderRadius: 6,
                         padding: "4px 10px",
                         backgroundColor: "transparent",
@@ -170,7 +173,7 @@ export default function StoryBottomSheet({
                           fontFamily: "Helvetica, Arial, sans-serif",
                           fontSize: "12px",
                           fontWeight: 600,
-                          color: CATEGORY_COLOR[story.category],
+                          color: CATEGORY_COLOR[story.category[0]],
                           letterSpacing: "0.01em",
                         }}
                       >
