@@ -43,7 +43,7 @@ export async function submitStory(
 
   const { data, error } = await supabase
     .from("stories")
-    .insert({ ...input, body })
+    .insert({ ...input, body, status: "published" })
     .select("id, title, category, moment, worth_it, advice, body, created_at")
     .single();
 

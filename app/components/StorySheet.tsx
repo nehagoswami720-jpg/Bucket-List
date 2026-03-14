@@ -137,7 +137,7 @@ function MicButton({
   onToggle: () => void;
 }) {
   return (
-    <div style={{ position: "relative", display: "inline-flex", alignItems: "center", marginLeft: -4 }}>
+    <div style={{ position: "relative", display: "inline-flex", alignItems: "center" }}>
       {/* Soundwave bars while recording */}
       <AnimatePresence>
         {isRecording && (
@@ -149,7 +149,7 @@ function MicButton({
             transition={{ duration: 0.2 }}
             style={{
               position: "absolute",
-              left: 28,
+              left: 48,
               display: "flex",
               alignItems: "center",
               gap: 3,
@@ -179,16 +179,19 @@ function MicButton({
       <motion.button
         onClick={onToggle}
         whileTap={{ scale: 0.88 }}
+        animate={{
+          backgroundColor: isRecording ? "rgba(139,26,26,0.12)" : "rgba(63,90,73,0.1)",
+        }}
+        transition={{ duration: 0.3 }}
         style={{
           width: 44,
           height: 44,
           borderRadius: "50%",
           border: "none",
-          background: "transparent",
           cursor: "pointer",
           display: "flex",
           alignItems: "center",
-          justifyContent: "flex-start",
+          justifyContent: "center",
           flexShrink: 0,
         }}
       >
@@ -418,7 +421,7 @@ export default function StorySheet({
   // Auto-close after success screen
   useEffect(() => {
     if (!submitted) return;
-    const t = setTimeout(onClose, 4000);
+    const t = setTimeout(onClose, 2500);
     return () => clearTimeout(t);
   }, [submitted]); // eslint-disable-line react-hooks/exhaustive-deps
 
