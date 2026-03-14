@@ -359,6 +359,7 @@ export default function StorySheet({
   const finalTranscriptRef        = useRef("");
   const isRecordingRef            = useRef(false);
   const wordIdRef                 = useRef(0);
+  const micSessionRef             = useRef(0);
   const isLastStep                = step === TOTAL - 1;
   const isCategoryStep            = step === TOTAL - 2;
   const charLimit                 = isLastStep ? MAX_TITLE : MAX;
@@ -395,8 +396,10 @@ export default function StorySheet({
 
   useEffect(() => {
     if (!open) {
-      if (isRecordingRef.current) {
-        recognitionRef.current?.stop();
+      if (isRecordingRef.current && recognitionRef.current) {
+        recognitionRef.current.onresult = null;
+        recognitionRef.current.onend = null;
+        recognitionRef.current.stop();
         setIsRecording(false);
         isRecordingRef.current = false;
       }
@@ -419,7 +422,7 @@ export default function StorySheet({
     return () => clearTimeout(t);
   }, [submitted]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  // Stop recording when step changes
+  // Stop recording when step changes (only needed if still actively recording)
   useEffect(() => {
     if (isRecordingRef.current) {
       recognitionRef.current?.stop();
@@ -427,10 +430,15 @@ export default function StorySheet({
       isRecordingRef.current = false;
       setSettledWords([]);
       setInterimText("");
+      baseTextRef.current = "";
+      finalTranscriptRef.current = "";
     }
   }, [step]);
 
   async function handleNext() {
+    micSessionRef.current++;
+    setSettledWords([]);
+    setInterimText("");
     const saved = [...answers];
     saved[step] = value;
     setAnswers(saved);
@@ -467,6 +475,9 @@ export default function StorySheet({
 
   function handleBack() {
     if (step === 0) return;
+    micSessionRef.current++;
+    setSettledWords([]);
+    setInterimText("");
     const saved = [...answers];
     saved[step] = value;
     setAnswers(saved);
@@ -503,8 +514,12 @@ export default function StorySheet({
 
     baseTextRef.current = value;
     finalTranscriptRef.current = "";
+    const sessionId = ++micSessionRef.current;
+    setSettledWords([]);
+    setInterimText("");
 
     recognition.onresult = (event: any) => {
+      if (micSessionRef.current !== sessionId) return;
       let newFinalText = "";
       let interim = "";
       for (let i = event.resultIndex; i < event.results.length; i++) {
