@@ -558,18 +558,26 @@ export default function StorySheet({
 
     recognition.onerror = (event: any) => {
       console.log("recognition error:", event.error);
-      setIsRecording(false);
-      isRecordingRef.current = false;
-      setSettledWords([]);
-      setInterimText("");
+      // Only hard-stop on permission denial — other errors let onend handle restart
+      if (event.error === "not-allowed") {
+        setIsRecording(false);
+        isRecordingRef.current = false;
+        setInterimText("");
+        setMicPermissionDenied(true);
+      }
     };
 
     recognition.onend = () => {
-      if (isRecordingRef.current) {
-        setIsRecording(false);
-        isRecordingRef.current = false;
-        setSettledWords([]);
-        setInterimText("");
+      if (!isRecordingRef.current) return;
+      // iOS Safari stops continuous recognition after pauses — restart automatically
+      if (micSessionRef.current === sessionId) {
+        try {
+          recognitionRef.current?.start();
+        } catch {
+          setIsRecording(false);
+          isRecordingRef.current = false;
+          setInterimText("");
+        }
       }
     };
 
