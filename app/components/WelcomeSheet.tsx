@@ -121,7 +121,7 @@ export default function WelcomeSheet({
         </motion.div>
 
         {/* Breathing room */}
-        <div style={{ height: 52 }} />
+        <div style={{ height: 72 }} />
 
         <FadePara delay={0.25} style={{ marginBottom: "24px" }}>hi :)</FadePara>
 
