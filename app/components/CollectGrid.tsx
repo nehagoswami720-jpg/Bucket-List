@@ -137,7 +137,7 @@ function StoryRow({
           <span style={{
             fontFamily: "'Courier New', Courier, monospace",
             fontSize: 14,
-            color: isDone ? "#A09890" : "#202126",
+            color: isDone ? "#A09890" : "#282828",
             lineHeight: 1.5,
             display: "block",
             transition: "color 0.3s ease",

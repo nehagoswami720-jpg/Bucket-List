@@ -47,7 +47,7 @@ const questionFont: React.CSSProperties = {
 const courierBase: React.CSSProperties = {
   fontFamily: "'Courier New', Courier, monospace",
   fontSize: "16px",
-  letterSpacing: "-0.04em",
+  letterSpacing: "-0.02em",
   lineHeight: 1.55,
 };
 
@@ -113,14 +113,14 @@ function CategoryCard({
         fontFamily: "'Courier New', Courier, monospace",
         fontSize: "20px",
         fontWeight: 600,
-        letterSpacing: "-0.04em",
+        letterSpacing: "-0.02em",
         color: "#202020",
       }}>{cat.name}</div>
       <div style={{
         fontFamily: "'Courier New', Courier, monospace",
         fontSize: "16px",
         fontWeight: 600,
-        letterSpacing: "-0.04em",
+        letterSpacing: "-0.02em",
         color: "#6D6D6D",
         marginTop: 4,
       }}>{cat.desc}</div>
@@ -612,7 +612,7 @@ export default function StorySheet({
         style={{
           position: "fixed",
           bottom: 0, left: 0, right: 0, top: "7%",
-          backgroundColor: "#EDEAE5",
+          backgroundColor: "#F5F0E8",
           borderRadius: "26px 26px 0 0",
           zIndex: 61,
           display: "flex",

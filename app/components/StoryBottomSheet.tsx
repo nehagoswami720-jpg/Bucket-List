@@ -63,7 +63,7 @@ export default function StoryBottomSheet({
             style={{
               position: "fixed",
               inset: 0,
-              backgroundColor: "rgba(0,0,0,0.32)",
+              backgroundColor: "rgba(0,0,0,0.35)",
               backdropFilter: "blur(3px)",
               WebkitBackdropFilter: "blur(3px)",
               zIndex: 200,
@@ -84,7 +84,7 @@ export default function StoryBottomSheet({
               right: 0,
               height: "68vh",
               backgroundColor: "#F5F0E8",
-              borderRadius: "20px 20px 0 0",
+              borderRadius: "26px 26px 0 0",
               zIndex: 201,
               display: "flex",
               flexDirection: "column",
@@ -189,7 +189,7 @@ export default function StoryBottomSheet({
                     fontFamily: "Helvetica, Arial, sans-serif",
                     fontSize: "24px",
                     fontWeight: 700,
-                    color: "#2A2A2A",
+                    color: "#282828",
                     lineHeight: 1.3,
                     letterSpacing: "-0.02em",
                     margin: "0 0 20px",
@@ -202,7 +202,7 @@ export default function StoryBottomSheet({
                 <div style={{
                   fontFamily: "'Courier New', Courier, monospace",
                   fontSize: "16px",
-                  color: "#1E1E1E",
+                  color: "#202020",
                   lineHeight: 1.6,
                 }}>
                   {story.body ? (
@@ -317,7 +317,7 @@ export default function StoryBottomSheet({
                             animate={{ rotateX: 0, opacity: 1 }}
                             exit={{ rotateX: 90, opacity: 0 }}
                             transition={{ duration: 0.28, ease: [0.22, 1, 0.36, 1] }}
-                            style={{ display: "block", color: "#1A1A1A", whiteSpace: "nowrap", transformOrigin: "center center" }}
+                            style={{ display: "block", color: "#282828", whiteSpace: "nowrap", transformOrigin: "center center" }}
                           >
                             Save to my bucket list
                           </motion.span>
