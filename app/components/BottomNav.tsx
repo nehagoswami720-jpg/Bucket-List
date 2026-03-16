@@ -1,7 +1,7 @@
 "use client";
 
-import { useState } from "react";
-import { motion } from "framer-motion";
+import { useState, useRef } from "react";
+import { motion, useAnimationControls } from "framer-motion";
 import FootprintsIcon from "./FootprintsIcon";
 import { useWindowSize } from "../lib/useWindowSize";
 
@@ -39,6 +39,10 @@ export default function BottomNav({
 }) {
   const [tick, setTick] = useState(0);
   const { isDesktop } = useWindowSize();
+  const btnControls  = useAnimationControls();
+  const iconControls = useAnimationControls();
+  const [rings, setRings] = useState<number[]>([]);
+  const ringId = useRef(0);
 
   function handleSwitch(tab: Tab) {
     if (tab === active) return;
@@ -145,11 +149,53 @@ export default function BottomNav({
           padding: "0 8px",
           transform: `translateY(${btnLift}px)`,
           flexShrink: 0,
+          position: "relative",
         }}>
+          {/* Expanding rings */}
+          {rings.map((id) => (
+            <motion.div
+              key={id}
+              initial={{ scale: 0.6, opacity: 0.5 }}
+              animate={{ scale: 2.6, opacity: 0 }}
+              transition={{ duration: 0.65, ease: [0.22, 1, 0.36, 1] }}
+              style={{
+                position: "absolute",
+                width: btnSize,
+                height: btnSize,
+                borderRadius: "50%",
+                border: "2px solid #282828",
+                pointerEvents: "none",
+              }}
+            />
+          ))}
+
           <motion.button
-            onClick={onShare}
-            whileTap={{ scale: 0.9 }}
-            transition={{ type: "spring", stiffness: 400, damping: 20 }}
+            animate={btnControls}
+            onClick={() => {
+              // Pulse ring
+              const id = ++ringId.current;
+              setRings((r) => [...r, id]);
+              setTimeout(() => setRings((r) => r.filter((x) => x !== id)), 700);
+
+              // Button bounce
+              btnControls.start({
+                scale: [1, 0.82, 1.18, 0.95, 1.05, 1],
+                transition: { duration: 0.5, ease: [0.34, 1.56, 0.64, 1] },
+              });
+
+              // Icon spin
+              iconControls.start({
+                rotate: [0, 135],
+                transition: { duration: 0.4, ease: [0.34, 1.56, 0.64, 1] },
+              }).then(() =>
+                iconControls.start({
+                  rotate: 0,
+                  transition: { duration: 0 },
+                })
+              );
+
+              onShare?.();
+            }}
             style={{
               width: btnSize,
               height: btnSize,
@@ -161,11 +207,19 @@ export default function BottomNav({
               alignItems: "center",
               justifyContent: "center",
               boxShadow: "0 6px 20px rgba(0,0,0,0.28), inset 0 1px 0 rgba(255,255,255,0.1)",
+              position: "relative",
             }}
           >
-            <svg width={isDesktop ? 26 : 22} height={isDesktop ? 26 : 22} viewBox="0 0 22 22" fill="none">
+            <motion.svg
+              animate={iconControls}
+              width={isDesktop ? 26 : 22}
+              height={isDesktop ? 26 : 22}
+              viewBox="0 0 22 22"
+              fill="none"
+              style={{ display: "block" }}
+            >
               <path d="M11 4v14M4 11h14" stroke="#ffffff" strokeWidth="2.2" strokeLinecap="round"/>
-            </svg>
+            </motion.svg>
           </motion.button>
         </div>
 

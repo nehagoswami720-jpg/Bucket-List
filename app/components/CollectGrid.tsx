@@ -13,7 +13,7 @@ function PaperclipSVG() {
     <svg width="38" height="72" viewBox="0 0 38 72" fill="none" style={{ transform: "rotate(-8deg)" }}>
       <path
         d="M 19,4 Q 32,4 32,16 L 32,54 Q 32,68 19,68 Q 6,68 6,54 L 6,18 Q 6,8 19,8 Q 30,8 30,18 L 30,54 Q 30,62 19,62 Q 10,62 10,54 L 10,20"
-        stroke="#282828" strokeWidth="3.8" strokeLinecap="round" strokeLinejoin="round" fill="none"
+        stroke="#3F7A4A" strokeWidth="3.8" strokeLinecap="round" strokeLinejoin="round" fill="none"
       />
     </svg>
   );
@@ -25,7 +25,7 @@ function WobblyUnderline() {
     <svg width="180" height="8" viewBox="0 0 180 8" style={{ display: "block" }}>
       <motion.path
         d="M 2,5 Q 30,2 60,5 Q 90,8 120,4 Q 150,1 178,5"
-        stroke="#2C2416" strokeWidth="1.4" fill="none" strokeLinecap="round"
+        stroke="#4A4540" strokeWidth="1.4" fill="none" strokeLinecap="round"
         initial={{ pathLength: 0 }}
         animate={{ pathLength: 1 }}
         transition={{ duration: 0.7, delay: 0.3, ease: [0.22, 1, 0.36, 1] }}
@@ -66,7 +66,7 @@ function Checkbox({ checked, onToggle }: { checked: boolean; onToggle: () => voi
           <motion.path
             d="M 1.5,2 Q 1,1.5 2,1.2 L 13.5,1 Q 14.5,1.2 14.8,2 L 15,13.5 Q 14.8,15 13.5,14.8 L 2,15 Q 1,14.8 1.2,13.5 Z"
             fill={checked ? "#282828" : "none"}
-            stroke="#2C2416" strokeWidth="1.4" strokeLinejoin="round"
+            stroke="#4A4540" strokeWidth="1.4" strokeLinejoin="round"
             animate={{ fill: checked ? "#282828" : "rgba(0,0,0,0)" }}
             transition={{ duration: 0.18 }}
           />
@@ -117,15 +117,6 @@ function StoryRow({
         transition={{ duration: 0.3 }}
         style={{ display: "flex", alignItems: "flex-start", gap: 8 }}
       >
-        {/* Row number */}
-        <span style={{
-          fontFamily: "'Courier New', Courier, monospace",
-          fontSize: 11, lineHeight: "18px",
-          width: 14, textAlign: "right", flexShrink: 0, color: "#9C9C9C",
-        }}>
-          {index + 1}
-        </span>
-
         {/* Checkbox — marks done */}
         <Checkbox checked={isDone} onToggle={onToggleDone} />
 
@@ -139,7 +130,8 @@ function StoryRow({
           <span style={{
             fontFamily: "'Courier New', Courier, monospace",
             fontSize: 14,
-            color: isDone ? "#A09890" : "#282828",
+            fontWeight: 700,
+            color: isDone ? "#A09890" : "#4A4540",
             lineHeight: 1.5,
             display: "block",
             transition: "color 0.3s ease",
@@ -252,7 +244,7 @@ export default function CollectGrid({
                 position: "relative", zIndex: 1,
                 backgroundColor: "#FFFFFF", borderRadius: 4,
                 boxShadow: "0 4px 24px rgba(0,0,0,0.10), 0 1px 4px rgba(0,0,0,0.06)",
-                backgroundImage: "repeating-linear-gradient(to bottom, transparent, transparent 27px, #F0EDE8 27px, #F0EDE8 28px)",
+                backgroundImage: "repeating-linear-gradient(to bottom, transparent, transparent 27px, rgba(0,0,0,0.055) 27px, rgba(0,0,0,0.055) 28px)",
                 backgroundPosition: "0 110px",
                 padding: "56px 24px 48px",
               }}

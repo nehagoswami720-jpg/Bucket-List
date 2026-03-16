@@ -1,7 +1,7 @@
 "use client";
 
 import { useRef, useEffect, useState, useCallback, Fragment } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion, AnimatePresence, useAnimationControls } from "framer-motion";
 import type { StoryFormData } from "../lib/api";
 import type { Category } from "../lib/storyTypes";
 
@@ -354,6 +354,7 @@ export default function StorySheet({
   const [speechSupported, setSpeechSupported]         = useState(false);
   const [settledWords, setSettledWords]               = useState<{ id: number; text: string }[]>([]);
   const [interimText, setInterimText]                 = useState("");
+  const ctaControls               = useAnimationControls();
   const rippleId                  = useRef(0);
   const textareaRef               = useRef<HTMLTextAreaElement>(null);
   const scrollRef                 = useRef<HTMLDivElement>(null);
@@ -931,6 +932,7 @@ export default function StorySheet({
           }}>
           <motion.button
             disabled={submitting || (isCategoryStep && selectedCategories.length === 0) || (!isCategoryStep && isEmpty && step !== 2)}
+            animate={ctaControls}
             onClick={(e) => {
               const rect = e.currentTarget.getBoundingClientRect();
               const id = ++rippleId.current;
@@ -939,9 +941,12 @@ export default function StorySheet({
                 { id, x: e.clientX - rect.left, y: e.clientY - rect.top },
               ]);
               setTimeout(() => setRipples((r) => r.filter((rp) => rp.id !== id)), 700);
+              ctaControls.start({
+                scale: [1, 0.92, 1.06, 0.98, 1.02, 1],
+                transition: { duration: 0.45, ease: [0.34, 1.56, 0.64, 1] },
+              });
               handleNext();
             }}
-            whileTap={{ scale: 0.96 }}
             whileHover={{ filter: "brightness(1.12)" }}
             transition={{ type: "spring", stiffness: 400, damping: 28 }}
             style={{

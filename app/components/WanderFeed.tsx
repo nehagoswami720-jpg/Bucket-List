@@ -168,6 +168,27 @@ function StoryBubble({
   const path = getBubblePath(story.w, story.h, story.tailDir);
   const visible = activeFilters.includes("All") || story.category.some((c) => activeFilters.includes(c));
 
+  const controls = useAnimationControls();
+  const [ripples, setRipples] = useState<{ id: number; x: number; y: number }[]>([]);
+  const rippleRef = useRef(0);
+
+  function handleTap(e: React.MouseEvent, s: Story) {
+    // Ripple from tap point
+    const rect = (e.currentTarget as HTMLElement).getBoundingClientRect();
+    const id = ++rippleRef.current;
+    setRipples((r) => [...r, { id, x: e.clientX - rect.left, y: e.clientY - rect.top }]);
+    setTimeout(() => setRipples((r) => r.filter((rp) => rp.id !== id)), 650);
+
+    // Jelly squish — wider & shorter on press, then bounces back with overshoot
+    controls.start({
+      scaleX: [1, 1.13, 0.94, 1.05, 0.98, 1],
+      scaleY: [1, 0.88, 1.08, 0.96, 1.02, 1],
+      transition: { duration: 0.55, ease: [0.34, 1.56, 0.64, 1] },
+    });
+
+    onTap(s);
+  }
+
   return (
     /* rotation wrapper — plain div so Framer Motion transforms don't conflict */
     <div
@@ -212,11 +233,31 @@ function StoryBubble({
         >
           {/* tap interaction */}
           <motion.div
-            whileTap={{ scale: 1.08 }}
-            transition={{ type: "spring", stiffness: 300, damping: 15 }}
-            onClick={() => onTap(story)}
-            style={{ cursor: "pointer", userSelect: "none" }}
+            animate={controls}
+            onClick={(e) => handleTap(e, story)}
+            style={{ cursor: "pointer", userSelect: "none", position: "relative", overflow: "visible" }}
           >
+            {/* Ripple */}
+            {ripples.map((r) => (
+              <motion.div
+                key={r.id}
+                initial={{ scale: 0, opacity: 0.35 }}
+                animate={{ scale: 5, opacity: 0 }}
+                transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
+                style={{
+                  position: "absolute",
+                  left: r.x - 24,
+                  top: r.y - 24,
+                  width: 48,
+                  height: 48,
+                  borderRadius: "50%",
+                  backgroundColor: isOwn ? "#C49A28" : CATEGORY_COLOR[story.category[0]],
+                  pointerEvents: "none",
+                  zIndex: 10,
+                  opacity: 0.25,
+                }}
+              />
+            ))}
             {/* Wobbly SVG bubble */}
             <svg
               width={story.w}
