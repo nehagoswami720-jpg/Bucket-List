@@ -3,6 +3,7 @@
 import { motion } from "framer-motion";
 import EnvelopeIcon from "./EnvelopeIcon";
 
+
 const font: React.CSSProperties = {
   fontFamily: "'Courier New', Courier, monospace",
   letterSpacing: "-0.03em",
@@ -11,7 +12,7 @@ const font: React.CSSProperties = {
 const para: React.CSSProperties = {
   ...font,
   fontSize: "16px",
-  color: "#000000",
+  color: "#202020",
   fontWeight: "500",
   textAlign: "center",
   lineHeight: 1.5,
@@ -53,7 +54,7 @@ export default function WelcomeSheet({
           left: 0,
           right: 0,
           top: "7%",
-          backgroundColor: "#FFF7ED",
+          backgroundColor: "#FFF3E5",
           borderRadius: "26px 26px 0 0",
           zIndex: 11,
           overflowY: "auto",
@@ -148,7 +149,7 @@ export default function WelcomeSheet({
             backgroundColor: "#282828",
             color: "#ffffff",
             fontSize: "18px",
-            fontWeight: "bold",
+            fontWeight: 700,
             border: "none",
             borderRadius: "14px",
             cursor: "pointer",

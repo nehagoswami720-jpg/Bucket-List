@@ -4,6 +4,7 @@ import { useState, useRef, useEffect } from "react";
 import { motion, AnimatePresence, useAnimationControls } from "framer-motion";
 import { DBStory, CATEGORY_COLOR } from "../lib/storyTypes";
 
+
 export default function StoryBottomSheet({
   story,
   isSaved,
@@ -83,7 +84,7 @@ export default function StoryBottomSheet({
               left: 0,
               right: 0,
               height: "68vh",
-              backgroundColor: "#FFF7ED",
+              backgroundColor: "#FFF3E5",
               borderRadius: "26px 26px 0 0",
               zIndex: 201,
               display: "flex",
@@ -202,8 +203,9 @@ export default function StoryBottomSheet({
                 <div style={{
                   fontFamily: "'Courier New', Courier, monospace",
                   fontSize: "16px",
-                  color: "#202020",
-                  lineHeight: 1.6,
+                  color: "#141414",
+                  lineHeight: 1.45,
+                  letterSpacing: "-0.03em",
                 }}>
                   {story.body ? (
                     story.body.split("\n\n").map((para, i) => (

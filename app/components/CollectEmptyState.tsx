@@ -7,7 +7,7 @@ const font: React.CSSProperties = {
   letterSpacing: "-0.02em",
   fontSize: "16px",
   fontWeight: 600,
-  color: "#000000",
+  color: "#202020",
   textAlign: "center",
   lineHeight: 1.6,
   margin: 0,

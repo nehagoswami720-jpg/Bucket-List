@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
 import FootprintsIcon from "./FootprintsIcon";
+import { useWindowSize } from "../lib/useWindowSize";
 
 function BookmarkIcon({ size = 20 }: { size?: number }) {
   return (
@@ -37,12 +38,20 @@ export default function BottomNav({
   onShare?: () => void;
 }) {
   const [tick, setTick] = useState(0);
+  const { isDesktop } = useWindowSize();
 
   function handleSwitch(tab: Tab) {
     if (tab === active) return;
     onSwitch(tab);
     setTick((t) => t + 1);
   }
+
+  const tabPadding    = isDesktop ? "6px 48px" : "4px 28px";
+  const tabFontSize   = isDesktop ? 13 : 11;
+  const iconSize      = isDesktop ? 24 : 20;
+  const btnSize       = isDesktop ? 68 : 56;
+  const btnLift       = isDesktop ? -24 : -20;
+  const bottomPad     = isDesktop ? "0 24px 32px" : "0 16px 40px";
 
   return (
     <div
@@ -53,7 +62,7 @@ export default function BottomNav({
         right: 0,
         display: "flex",
         justifyContent: "center",
-        padding: "0 16px 40px",
+        padding: bottomPad,
         pointerEvents: "none",
         zIndex: 50,
       }}
@@ -96,7 +105,7 @@ export default function BottomNav({
                 alignItems: "center",
                 justifyContent: "center",
                 gap: 4,
-                padding: "4px 28px",
+                padding: tabPadding,
                 border: "none",
                 background: "transparent",
                 cursor: "pointer",
@@ -109,13 +118,13 @@ export default function BottomNav({
                 key={`${label}-${tick}`}
                 animate={isActive ? iconVariants[label] : {}}
                 transition={{ duration: 0.45, ease: [0.22, 1, 0.36, 1] }}
-                style={{ width: 20, height: 20, display: "flex", alignItems: "center", justifyContent: "center" }}
+                style={{ width: iconSize, height: iconSize, display: "flex", alignItems: "center", justifyContent: "center" }}
               >
-                <Icon size={20} />
+                <Icon size={iconSize} />
               </motion.span>
               <span style={{
                 fontFamily: "Helvetica, Arial, sans-serif",
-                fontSize: 11,
+                fontSize: tabFontSize,
                 fontWeight: isActive ? 600 : 400,
                 letterSpacing: "0.01em",
                 userSelect: "none",
@@ -129,13 +138,12 @@ export default function BottomNav({
         })()}
 
         {/* ── Center + button ── */}
-        {/* Outer div owns the lift — Framer Motion only controls scale, never translateY */}
         <div style={{
           display: "flex",
           alignItems: "center",
           justifyContent: "center",
           padding: "0 8px",
-          transform: "translateY(-20px)",
+          transform: `translateY(${btnLift}px)`,
           flexShrink: 0,
         }}>
           <motion.button
@@ -143,8 +151,8 @@ export default function BottomNav({
             whileTap={{ scale: 0.9 }}
             transition={{ type: "spring", stiffness: 400, damping: 20 }}
             style={{
-              width: 56,
-              height: 56,
+              width: btnSize,
+              height: btnSize,
               borderRadius: "50%",
               backgroundColor: "#282828",
               border: "none",
@@ -155,7 +163,7 @@ export default function BottomNav({
               boxShadow: "0 6px 20px rgba(0,0,0,0.28), inset 0 1px 0 rgba(255,255,255,0.1)",
             }}
           >
-            <svg width="22" height="22" viewBox="0 0 22 22" fill="none">
+            <svg width={isDesktop ? 26 : 22} height={isDesktop ? 26 : 22} viewBox="0 0 22 22" fill="none">
               <path d="M11 4v14M4 11h14" stroke="#ffffff" strokeWidth="2.2" strokeLinecap="round"/>
             </svg>
           </motion.button>
@@ -178,7 +186,7 @@ export default function BottomNav({
                 alignItems: "center",
                 justifyContent: "center",
                 gap: 4,
-                padding: "4px 28px",
+                padding: tabPadding,
                 border: "none",
                 background: "transparent",
                 cursor: "pointer",
@@ -191,13 +199,13 @@ export default function BottomNav({
                 key={`${label}-${tick}`}
                 animate={isActive ? iconVariants[label] : {}}
                 transition={{ duration: 0.45, ease: [0.22, 1, 0.36, 1] }}
-                style={{ width: 20, height: 20, display: "flex", alignItems: "center", justifyContent: "center" }}
+                style={{ width: iconSize, height: iconSize, display: "flex", alignItems: "center", justifyContent: "center" }}
               >
-                <Icon size={20} />
+                <Icon size={iconSize} />
               </motion.span>
               <span style={{
                 fontFamily: "Helvetica, Arial, sans-serif",
-                fontSize: 11,
+                fontSize: tabFontSize,
                 fontWeight: isActive ? 600 : 400,
                 letterSpacing: "0.01em",
                 userSelect: "none",

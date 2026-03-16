@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { motion, AnimatePresence, useAnimationControls } from "framer-motion";
 import { supabase } from "../lib/supabase";
 
+
 export default function AuthSheet({
   open,
   onClose,
@@ -92,7 +93,7 @@ export default function AuthSheet({
             style={{
               position: "fixed",
               bottom: 0, left: 0, right: 0,
-              backgroundColor: "#FFF7ED",
+              backgroundColor: "#FFF3E5",
               borderRadius: "26px 26px 0 0",
               zIndex: 301,
               padding: "32px 28px 52px",
@@ -186,7 +187,7 @@ export default function AuthSheet({
                         height: 52, borderRadius: 14,
                         border: "none", marginTop: 32,
                         fontFamily: "'Courier New', Courier, monospace",
-                        fontSize: 18, fontWeight: "bold",
+                        fontSize: 18, fontWeight: 700,
                         color: "#ffffff", letterSpacing: "-0.02em",
                         cursor: email.trim() ? "pointer" : "default",
                         width: "100%",

@@ -23,21 +23,21 @@ export default function WanderEmptyState({ onStart }: { onStart?: () => void }) 
         textAlign: "center",
       }}
     >
-      <p style={{ ...font, fontSize: "16px", fontWeight: 600, color: "#000000", lineHeight: 1.6, margin: 0 }}>
+      <p style={{ ...font, fontSize: "16px", fontWeight: 600, color: "#202020", lineHeight: 1.6, margin: 0 }}>
         nothing here yet.
       </p>
 
-      <p style={{ ...font, fontSize: "16px", fontWeight: 600, color: "#000000", lineHeight: 1.6, margin: 0 }}>
+      <p style={{ ...font, fontSize: "16px", fontWeight: 600, color: "#202020", lineHeight: 1.6, margin: 0 }}>
         not because there are no stories worth telling.
       </p>
 
-      <p style={{ ...font, fontSize: "16px", fontWeight: 600, color: "#000000", lineHeight: 1.6, margin: 0 }}>
+      <p style={{ ...font, fontSize: "16px", fontWeight: 600, color: "#202020", lineHeight: 1.6, margin: 0 }}>
         but because nobody has been brave enough
         <br />
         to write one down.
       </p>
 
-      <p style={{ ...font, fontSize: "16px", fontWeight: 600, color: "#000000", lineHeight: 1.6, margin: 0 }}>
+      <p style={{ ...font, fontSize: "16px", fontWeight: 600, color: "#202020", lineHeight: 1.6, margin: 0 }}>
         yet.
       </p>
 

@@ -4,6 +4,8 @@ import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import StoryBottomSheet from "./StoryBottomSheet";
 import type { DBStory } from "../lib/storyTypes";
+import { useWindowSize } from "../lib/useWindowSize";
+
 
 // ── Paperclip ──────────────────────────────────────────────────────────────────
 function PaperclipSVG() {
@@ -181,6 +183,7 @@ export default function CollectGrid({
   onToggleDone: (storyId: string) => void;
   onStoryOpen?: (open: boolean) => void;
 }) {
+  const { isDesktop } = useWindowSize();
   const [selectedStory, setSelectedStory] = useState<DBStory | null>(null);
 
   function openStory(story: DBStory) { setSelectedStory(story); onStoryOpen?.(true); }
@@ -201,7 +204,7 @@ export default function CollectGrid({
           paddingTop: 56, paddingBottom: 110,
           paddingLeft: 20, paddingRight: 20,
           boxSizing: "border-box",
-          maxWidth: 390, margin: "0 auto",
+          maxWidth: isDesktop ? 640 : 390, margin: "0 auto",
         }}>
           {/* Paper stack */}
           <div style={{ position: "relative", paddingTop: 20 }}>

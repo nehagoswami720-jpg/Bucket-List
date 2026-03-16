@@ -2,6 +2,8 @@
 
 import { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence, useAnimationControls } from "framer-motion";
+import Lottie from "lottie-react";
+import loaderAnimation from "../../public/loader.json";
 // AnimatePresence + useAnimationControls used in FilterChip
 import { TransformWrapper, TransformComponent } from "react-zoom-pan-pinch";
 import type { ReactZoomPanPinchRef } from "react-zoom-pan-pinch";
@@ -457,16 +459,7 @@ export default function WanderFeed({
       backgroundSize: "24px 24px",
       display: "flex", alignItems: "center", justifyContent: "center",
     }}>
-      <div style={{ display: "flex", gap: 8 }}>
-        {[0, 1, 2].map((i) => (
-          <motion.div
-            key={i}
-            animate={{ opacity: [0.2, 1, 0.2], y: [0, -6, 0] }}
-            transition={{ duration: 1.1, repeat: Infinity, delay: i * 0.18, ease: "easeInOut" }}
-            style={{ width: 7, height: 7, borderRadius: "50%", backgroundColor: "#282828" }}
-          />
-        ))}
-      </div>
+      <Lottie animationData={loaderAnimation} loop style={{ width: 120, height: 120, transform: "scaleX(-1)" }} />
     </div>
   );
 

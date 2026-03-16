@@ -5,6 +5,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import type { StoryFormData } from "../lib/api";
 import type { Category } from "../lib/storyTypes";
 
+
 const MAX       = 280;
 const MAX_TITLE = 80;
 const TOTAL     = 5;
@@ -73,14 +74,14 @@ function CategoryCard({
         setTimeout(() => setCardRipples((r) => r.filter((rp) => rp.id !== id)), 600);
         onToggle();
       }}
-      animate={{ borderColor: selected ? "#464646" : "#CECECE" }}
+      animate={{ borderColor: selected ? "#464646" : "#E6D8C7" }}
       transition={{ duration: 0.2 }}
       whileTap={{ scale: 0.97 }}
       style={{
         backgroundColor: "transparent",
         borderRadius: 8,
-        border: "2px solid #CECECE",
-        padding: "16px 18px",
+        border: "2px solid #E6D8C7",
+        padding: "12px 18px",
         cursor: "pointer",
         textAlign: "left",
         display: "block",
@@ -122,7 +123,7 @@ function CategoryCard({
         fontWeight: 600,
         letterSpacing: "-0.02em",
         color: "#6D6D6D",
-        marginTop: 4,
+        marginTop: 0,
       }}>{cat.desc}</div>
     </motion.button>
   );
@@ -612,7 +613,7 @@ export default function StorySheet({
         style={{
           position: "fixed",
           bottom: 0, left: 0, right: 0, top: "7%",
-          backgroundColor: "#FFF7ED",
+          backgroundColor: "#FFF3E5",
           borderRadius: "26px 26px 0 0",
           zIndex: 61,
           display: "flex",
@@ -799,6 +800,7 @@ export default function StorySheet({
                         transition={{ duration: 0.15 }}
                         style={{
                           ...courierBase,
+                          lineHeight: 1.25,
                           color: "#6D6D6D",
                           fontWeight: 500,
                           pointerEvents: "none",
@@ -917,7 +919,7 @@ export default function StorySheet({
           left: 0, right: 0,
           bottom: keyboardHeight,
           display: submitted ? "none" : undefined,
-          backgroundColor: "#FFF7ED",
+          backgroundColor: "#FFF3E5",
           zIndex: 62,
           transition: "bottom 0.25s ease",
         }}>
@@ -928,7 +930,7 @@ export default function StorySheet({
             justifyContent: "center",
           }}>
           <motion.button
-            disabled={submitting || (isCategoryStep && selectedCategories.length === 0) || (!isCategoryStep && isEmpty)}
+            disabled={submitting || (isCategoryStep && selectedCategories.length === 0) || (!isCategoryStep && isEmpty && step !== 2)}
             onClick={(e) => {
               const rect = e.currentTarget.getBoundingClientRect();
               const id = ++rippleId.current;
@@ -951,7 +953,7 @@ export default function StorySheet({
               backgroundColor: "#282828",
               color: "#ffffff",
               fontSize: "18px",
-              fontWeight: "bold",
+              fontWeight: 700,
               border: "none",
               borderRadius: "14px",
               cursor: "pointer",
