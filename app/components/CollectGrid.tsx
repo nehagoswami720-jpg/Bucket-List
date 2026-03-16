@@ -191,7 +191,7 @@ export default function CollectGrid({
       {/* Scrollable screen */}
       <div style={{
         position: "fixed", inset: 0,
-        backgroundColor: "#F5F0E8",
+        backgroundColor: "#FFF7ED",
         overflowY: "auto",
         WebkitOverflowScrolling: "touch",
       } as React.CSSProperties}>

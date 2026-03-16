@@ -13,7 +13,7 @@ export default function Home() {
   // Wait for Supabase session check — render nothing to avoid any flash
   if (loading) {
     return (
-      <div style={{ position: "fixed", inset: 0, backgroundColor: "#EDEAE5" }} />
+      <div style={{ position: "fixed", inset: 0, backgroundColor: "#FFF7ED" }} />
     );
   }
 

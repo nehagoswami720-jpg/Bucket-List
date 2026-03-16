@@ -612,7 +612,7 @@ export default function StorySheet({
         style={{
           position: "fixed",
           bottom: 0, left: 0, right: 0, top: "7%",
-          backgroundColor: "#F5F0E8",
+          backgroundColor: "#FFF7ED",
           borderRadius: "26px 26px 0 0",
           zIndex: 61,
           display: "flex",
@@ -917,7 +917,7 @@ export default function StorySheet({
           left: 0, right: 0,
           bottom: keyboardHeight,
           display: submitted ? "none" : undefined,
-          backgroundColor: "#EDEAE5",
+          backgroundColor: "#FFF7ED",
           zIndex: 62,
           transition: "bottom 0.25s ease",
         }}>

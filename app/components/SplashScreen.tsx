@@ -22,7 +22,7 @@ export default function SplashScreen({ onStartExploring }: { onStartExploring?: 
       style={{
         position: "fixed",
         inset: 0,
-        backgroundColor: "#EDEAE5",
+        backgroundColor: "#FFF7ED",
         display: "flex",
         flexDirection: "column",
         alignItems: "center",

@@ -65,7 +65,7 @@ export default function BottomNav({
         style={{
           display: "inline-flex",
           alignItems: "center",
-          background: "rgba(237, 234, 229, 0.5)",
+          background: "rgba(255, 247, 237, 0.5)",
           backdropFilter: "blur(20px)",
           WebkitBackdropFilter: "blur(20px)",
           borderRadius: "20px",

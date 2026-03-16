@@ -83,7 +83,7 @@ export default function StoryBottomSheet({
               left: 0,
               right: 0,
               height: "68vh",
-              backgroundColor: "#F5F0E8",
+              backgroundColor: "#FFF7ED",
               borderRadius: "26px 26px 0 0",
               zIndex: 201,
               display: "flex",

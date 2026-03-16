@@ -452,8 +452,8 @@ export default function WanderFeed({
   if (loading) return (
     <div style={{
       position: "fixed", inset: 0,
-      backgroundColor: "#F5F0E8",
-      backgroundImage: "radial-gradient(circle, #E0D5C5 1.2px, transparent 1.2px)",
+      backgroundColor: "#FFF7ED",
+      backgroundImage: "radial-gradient(circle, #F0E8D8 1.2px, transparent 1.2px)",
       backgroundSize: "24px 24px",
       display: "flex", alignItems: "center", justifyContent: "center",
     }}>
@@ -477,8 +477,8 @@ export default function WanderFeed({
   return (
     <div style={{
       position: "fixed", inset: 0, zIndex: 2,
-      backgroundColor: "#F5F0E8",
-      backgroundImage: "radial-gradient(circle, #E0D5C5 1.2px, transparent 1.2px)",
+      backgroundColor: "#FFF7ED",
+      backgroundImage: "radial-gradient(circle, #F0E8D8 1.2px, transparent 1.2px)",
       backgroundSize: "24px 24px",
     }}>
 
@@ -498,7 +498,7 @@ export default function WanderFeed({
       {/* ── Infinite pan canvas ──────────────────────────────────────────── */}
       <div style={{
         position: "absolute", top: 70, left: 0, right: 0, bottom: 82,
-        overflow: "hidden", touchAction: "none", backgroundColor: "#F5F0E8",
+        overflow: "hidden", touchAction: "none", backgroundColor: "#FFF7ED",
       }}>
         <TransformWrapper
           ref={transformRef}
@@ -511,8 +511,8 @@ export default function WanderFeed({
         >
           <TransformComponent wrapperStyle={{
             width: "100%", height: "100%",
-            backgroundColor: "#F5F0E8",
-            backgroundImage: "radial-gradient(circle, #E0D5C5 1.2px, transparent 1.2px)",
+            backgroundColor: "#FFF7ED",
+            backgroundImage: "radial-gradient(circle, #F0E8D8 1.2px, transparent 1.2px)",
             backgroundSize: "24px 24px",
             backgroundAttachment: "local",
           }}>

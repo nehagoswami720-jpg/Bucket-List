@@ -165,7 +165,7 @@ export default function MainScreen() {
       transition={{ duration: 0.5, ease: "easeOut" }}
       style={{
         position: "fixed", inset: 0,
-        backgroundColor: "#EDEAE5",
+        backgroundColor: "#FFF7ED",
         width: "100%", height: "100%",
         display: "flex", alignItems: "center", justifyContent: "center",
       }}

@@ -53,7 +53,7 @@ export default function WelcomeSheet({
           left: 0,
           right: 0,
           top: "7%",
-          backgroundColor: "#EDEAE5",
+          backgroundColor: "#FFF7ED",
           borderRadius: "26px 26px 0 0",
           zIndex: 11,
           overflowY: "auto",
