@@ -411,7 +411,8 @@ export default function WanderFeed({
   const [loading, setLoading]             = useState(true);
   const [activeFilters, setActiveFilters] = useState<string[]>(["All"]);
   const [selectedStory, setSelectedStory] = useState<Story | null>(null);
-  const transformRef = useRef<ReactZoomPanPinchRef>(null);
+  const transformRef    = useRef<ReactZoomPanPinchRef>(null);
+  const hasInitialPan   = useRef(false);
 
   // Fetch stories from Supabase
   async function loadStories() {
@@ -481,9 +482,10 @@ export default function WanderFeed({
   function openStory(story: Story) { setSelectedStory(story); onStoryOpen?.(true); }
   function closeStory()             { setSelectedStory(null);  onStoryOpen?.(false); }
 
-  // Drop user at a random spot within the bubble cluster on first load
+  // Drop user at a random spot within the bubble cluster — only on first load
   useEffect(() => {
-    if (stories.length === 0) return;
+    if (stories.length === 0 || hasInitialPan.current) return;
+    hasInitialPan.current = true;
     const canvasX = 1200 + Math.random() * 600;
     const canvasY = 1000 + Math.random() * 500;
     const vw = window.innerWidth;

@@ -153,8 +153,9 @@ export default function MainScreen() {
       const ids = JSON.parse(localStorage.getItem("wander_my_stories") || "[]") as string[];
       localStorage.setItem("wander_my_stories", JSON.stringify([...ids, story.id]));
     } catch {}
-    // Add to canvas immediately (pending in DB, won't appear via feed fetch)
+    // Add to canvas immediately and refresh feed
     setSubmittedStory(story);
+    setStoriesRefreshKey((k) => k + 1);
   }
 
 
