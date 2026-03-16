@@ -21,8 +21,8 @@ const caveat = Caveat({
 });
 
 export const metadata: Metadata = {
-  title: "Bucket List",
-  description: "Bucket list app",
+  title: "Wander",
+  description: "stories worth trying",
 };
 
 export default function RootLayout({
@@ -32,6 +32,14 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
+      <head>
+        <link rel="manifest" href="/manifest.json" />
+        <meta name="theme-color" content="#F5F0E8" />
+        <meta name="apple-mobile-web-app-capable" content="yes" />
+        <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+        <meta name="apple-mobile-web-app-title" content="Wander" />
+        <link rel="apple-touch-icon" href="/icon-192.png" />
+      </head>
       <body className={`${dmSans.variable} ${specialElite.variable} ${caveat.variable} antialiased`}>
         <AuthProvider>{children}</AuthProvider>
       </body>
