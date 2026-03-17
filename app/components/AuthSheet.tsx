@@ -58,7 +58,7 @@ export default function AuthSheet({
   }
 
   async function handleVerifyCode() {
-    if (code.length !== 6) return;
+    if (code.length < 6) return;
     setVerifying(true);
     setError("");
     const { error } = await supabase.auth.verifyOtp({
@@ -241,7 +241,7 @@ export default function AuthSheet({
                     margin: "0 0 24px", lineHeight: 1.3,
                     letterSpacing: "-0.02em",
                   }}>
-                    we sent a 6-digit code to <strong>{email}</strong>. enter it below.
+                    we sent a code to <strong>{email}</strong>. enter it below.
                   </p>
 
                   <input
@@ -251,7 +251,7 @@ export default function AuthSheet({
                     placeholder="123456"
                     value={code}
                     onChange={(e) => {
-                      const val = e.target.value.replace(/\D/g, "").slice(0, 6);
+                      const val = e.target.value.replace(/\D/g, "").slice(0, 8);
                       setCode(val);
                       if (val.length === 6) {
                         // auto-verify when 6 digits entered
@@ -285,7 +285,7 @@ export default function AuthSheet({
 
                   <motion.button
                     onClick={handleVerifyCode}
-                    disabled={verifying || code.length !== 6}
+                    disabled={verifying || code.length < 6}
                     animate={{ backgroundColor: code.length === 6 ? "#282828" : "#C0BAB2" }}
                     whileTap={code.length === 6 ? { scale: 0.95 } : {}}
                     transition={{ duration: 0.2 }}
