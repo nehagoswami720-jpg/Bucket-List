@@ -8,7 +8,7 @@ A mobile-first experience sharing app. People share things they've tried that ot
 
 - **Next.js** (app router) + **TypeScript**
 - **Framer Motion** — all animations, transitions, micro-interactions
-- **Supabase** — Postgres database, magic link auth, Realtime subscriptions
+- **Supabase** — Postgres database, OTP email auth, Realtime subscriptions
 - **Anthropic Claude** (Haiku) — AI story stitching on submission
 - **lottie-react** — loading animation
 - **react-zoom-pan-pinch** — infinite pan canvas on Wander feed
@@ -35,7 +35,7 @@ Returning (not signed):  Splash → Welcome sheet → Main screen
 | Collect | `CollectGrid.tsx` | Personal bucket list, paper stack aesthetic |
 | Story reader | `StoryBottomSheet.tsx` | 68vh bottom sheet, story body + save button |
 | Story submission | `StorySheet.tsx` | 5-step guided form |
-| Auth | `AuthSheet.tsx` | Magic link sign-in |
+| Auth | `AuthSheet.tsx` | OTP email code sign-in |
 
 ---
 
@@ -57,9 +57,11 @@ Returning (not signed):  Splash → Welcome sheet → Main screen
 
 ## Auth
 
-Magic link via Supabase. Required only to **save** stories to a bucket list. Anonymous story submission is always allowed.
+OTP email code via Supabase. Required only to **save** stories to a bucket list. Anonymous story submission is always allowed.
 
-**Pending save flow:** unauthenticated user taps "Save" → story stored in `localStorage` → auth prompt → after magic link redirect, save is completed automatically and the story sheet reopens.
+**Sign-in flow:** user enters email → receives 8-digit OTP code → enters it in-app → authenticated. No magic links (iOS PWA opens links in Safari which has separate storage).
+
+**Pending save flow:** unauthenticated user taps "Save" → story stored in `localStorage` → auth prompt → after sign-in, save is completed automatically and the story sheet reopens.
 
 Users never sign out — no logout flow exists by design.
 
@@ -193,6 +195,22 @@ ANTHROPIC_API_KEY=
 
 ---
 
+## Infrastructure
+
+| Service | Plan | Notes |
+|---------|------|-------|
+| Vercel | Hobby (free) | Auto-deploys on push to `main` |
+| Supabase | Pro | No email rate limits, 50k MAUs |
+| Anthropic | Pay-as-you-go | Claude Haiku for story stitching |
+
+---
+
+## PWA
+
+Wander is installable as a Progressive Web App on iOS and Android. Manifest at `public/manifest.json`, icons at `public/icon-192.png` and `public/icon-512.png`.
+
+---
+
 ## Deployment
 
 1. Import the GitHub repo at vercel.com
@@ -217,7 +235,7 @@ app/
     CollectGrid.tsx               bucket list, paper stack, checkbox done state
     StorySheet.tsx                5-step story submission form, mic input, category select
     StoryBottomSheet.tsx          story reader, save button, particle animation
-    AuthSheet.tsx                 magic link sign-in
+    AuthSheet.tsx                 OTP email code sign-in
     BottomNav.tsx                 floating tab bar, responsive
     WanderEmptyState.tsx          wander tab empty state
     CollectEmptyState.tsx         collect tab empty state (no auth)
