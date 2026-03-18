@@ -51,6 +51,7 @@ export default function AuthSheet({
     });
     setLoading(false);
     if (error) {
+      console.error("signInWithOtp error:", error);
       setError("Something went wrong. Try again.");
     } else {
       setSent(true);
@@ -286,8 +287,8 @@ export default function AuthSheet({
                   <motion.button
                     onClick={handleVerifyCode}
                     disabled={verifying || code.length < 6}
-                    animate={{ backgroundColor: code.length === 6 ? "#282828" : "#C0BAB2" }}
-                    whileTap={code.length === 6 ? { scale: 0.95 } : {}}
+                    animate={{ backgroundColor: code.length >= 6 ? "#282828" : "#C0BAB2" }}
+                    whileTap={code.length >= 6 ? { scale: 0.95 } : {}}
                     transition={{ duration: 0.2 }}
                     style={{
                       height: 52, borderRadius: 14,
@@ -295,7 +296,7 @@ export default function AuthSheet({
                       fontFamily: "'Courier New', Courier, monospace",
                       fontSize: 18, fontWeight: 700,
                       color: "#ffffff", letterSpacing: "-0.02em",
-                      cursor: code.length === 6 ? "pointer" : "default",
+                      cursor: code.length >= 6 ? "pointer" : "default",
                       width: "100%",
                       outline: "none",
                       WebkitTapHighlightColor: "transparent",
