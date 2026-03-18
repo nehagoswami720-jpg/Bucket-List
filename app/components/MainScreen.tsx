@@ -50,6 +50,7 @@ export default function MainScreen() {
   const [storiesRefreshKey, setStoriesRefreshKey]   = useState(0);
   const [postAuthStory, setPostAuthStory]           = useState<DBStory | null>(null);
   const [submittedStory, setSubmittedStory]         = useState<DBStory | null>(null);
+  const [closeStoryTrigger, setCloseStoryTrigger]   = useState(0);
   const [myStoryIds, setMyStoryIds]                 = useState<Set<string>>(() => {
     try {
       const ids = JSON.parse(localStorage.getItem("wander_my_stories") || "[]");
@@ -126,6 +127,7 @@ export default function MainScreen() {
     if (!user) {
       setPendingStory(story);
       pendingActionRef.current = () => performSave(story);
+      setCloseStoryTrigger((t) => t + 1);
       setShowAuthSheet(true);
       return;
     }
@@ -190,6 +192,7 @@ export default function MainScreen() {
               refreshKey={storiesRefreshKey}
               submittedStory={submittedStory}
               myStoryIds={myStoryIds}
+              closeStoryTrigger={closeStoryTrigger}
             />
           </motion.div>
         )}

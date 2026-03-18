@@ -398,6 +398,7 @@ export default function WanderFeed({
   refreshKey,
   submittedStory,
   myStoryIds,
+  closeStoryTrigger,
 }: {
   onStart?: () => void;
   onStoryOpen?: (open: boolean) => void;
@@ -406,6 +407,7 @@ export default function WanderFeed({
   refreshKey?: number;
   submittedStory?: DBStory | null;
   myStoryIds?: Set<string>;
+  closeStoryTrigger?: number;
 }) {
   const [stories, setStories]             = useState<Story[]>([]);
   const [loading, setLoading]             = useState(true);
@@ -481,6 +483,10 @@ export default function WanderFeed({
 
   function openStory(story: Story) { setSelectedStory(story); onStoryOpen?.(true); }
   function closeStory()             { setSelectedStory(null);  onStoryOpen?.(false); }
+
+  useEffect(() => {
+    if (closeStoryTrigger) closeStory();
+  }, [closeStoryTrigger]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Drop user at a random spot within the bubble cluster — only on first load
   useEffect(() => {
